@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"cleaning/internal/database"
 	"cleaning/internal/handler"
 	"cleaning/internal/routes"
 	"fmt"
@@ -19,6 +20,22 @@ var serveCmd = &cobra.Command{
 }
 
 func runServer() error {
+	postgresDB, err := database.NewPostgres(cfg.Database)
+	if err != nil {
+		return fmt.Errorf("connect to postgres failed: %w", err)
+	}
+
+	defer func() {
+		if err := postgresDB.Close(); err != nil {
+			slog.Warn("failed to close postgres connection", "error", err)
+		}
+	}()
+
+	slog.Info("postgres connection established",
+		"host", cfg.Database.Host,
+		"port", cfg.Database.Port,
+		"name", cfg.Database.Name)
+
 	handlerRegistry := handler.NewRegistry()
 
 	router := gin.Default()

@@ -31,6 +31,21 @@ func getEnvRequired(key string) (string, error) {
 	return trimmedValue, nil
 }
 
+func getEnvInt(key string, fallback int) (int, error) {
+	value, exists := os.LookupEnv(key)
+
+	if !exists {
+		return fallback, nil
+	}
+
+	valueInt, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert %s to int", value)
+	}
+
+	return valueInt, nil
+}
+
 func validatePort(key, value string) error {
 	port, err := strconv.Atoi(value)
 	if err != nil {
