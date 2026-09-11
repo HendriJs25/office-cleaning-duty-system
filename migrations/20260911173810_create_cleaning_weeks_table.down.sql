@@ -1,0 +1,1 @@
+DROP TABLE cleaning_weeks;
