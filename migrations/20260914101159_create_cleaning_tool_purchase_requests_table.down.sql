@@ -1,0 +1,1 @@
+DROP TABLE cleaning_tool_purchase_requests;

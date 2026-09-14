@@ -3,6 +3,7 @@ package config
 type Config struct {
 	App      App
 	Database *Database
+	Seed     *Seed
 }
 
 func Load() (*Config, error) {
@@ -10,9 +11,16 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	seed, err := loadSeed()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		App:      loadApp(),
 		Database: database,
+		Seed:     seed,
 	}, nil
 }
 
