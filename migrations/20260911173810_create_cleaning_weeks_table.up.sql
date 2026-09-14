@@ -17,6 +17,6 @@ CREATE TABLE cleaning_weeks (
 
     CONSTRAINT uq_cleaning_weeks_office_week_start_date UNIQUE (office_id, week_start_date),
     CONSTRAINT fk_cleaning_weeks_office FOREIGN KEY (office_id) REFERENCES offices(id) ON DELETE RESTRICT,
-    CONSTRAINT fk_cleaning_weeks_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
-    CONSTRAINT fk_cleaning_weeks_user FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE RESTRICT
+    CONSTRAINT fk_cleaning_weeks_user_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_cleaning_weeks_user_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE RESTRICT
 );
