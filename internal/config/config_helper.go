@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func getEnv(key, fallback string) string {
@@ -44,6 +45,20 @@ func getEnvInt(key string, fallback int) (int, error) {
 	}
 
 	return valueInt, nil
+}
+
+func getEnvDuration(key string, fallback time.Duration) (time.Duration, error) {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return fallback, nil
+	}
+
+	result, err := time.ParseDuration(value)
+	if err != nil {
+		return 0, fmt.Errorf("%s must be a valid duration:%w", key, err)
+	}
+
+	return result, nil
 }
 
 func validatePort(key, value string) error {
