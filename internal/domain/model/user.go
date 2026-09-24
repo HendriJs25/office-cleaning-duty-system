@@ -12,6 +12,7 @@ type User struct {
 	UUID         uuid.UUID
 	RoleID       int64
 	EmployeeID   *int64
+	UserName     string
 	Email        string
 	PasswordHash string
 	IsActive     bool
