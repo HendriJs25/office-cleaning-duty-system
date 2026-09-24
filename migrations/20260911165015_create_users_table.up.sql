@@ -3,6 +3,7 @@ CREATE TABLE users (
     uuid UUID NOT NULL,
     role_id BIGINT NOT NULL,
     employee_id BIGINT,
+    user_name VARCHAR(200) NOT NULL,
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,

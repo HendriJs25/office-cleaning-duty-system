@@ -43,6 +43,7 @@ func seedAdmin(tx *gorm.DB, adminRole model.Role, cfg *config.Seed) error {
 		admin := model.User{
 			UUID:         uuid.New(),
 			RoleID:       adminRole.ID,
+			UserName:     "Super Admin",
 			Email:        cfg.AdminEmail,
 			PasswordHash: string(passwordHash),
 			IsActive:     true,
