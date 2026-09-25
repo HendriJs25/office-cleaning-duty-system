@@ -10,6 +10,6 @@ type Session struct {
 	UUID      uuid.UUID `json:"uuid"`
 	UserName  string    `json:"user_name"`
 	Email     string    `json:"email"`
-	RoleCode  string    `json:"role_code"`
+	RoleID    int64     `json:"role_id"`
 	CreatedAt time.Time `json:"created_at"`
 }
