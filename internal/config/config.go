@@ -5,6 +5,7 @@ type Config struct {
 	Database *Database
 	Seed     *Seed
 	JWT      *JWT
+	Redis    *Redis
 }
 
 func Load() (*Config, error) {
@@ -23,11 +24,17 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	redis, err := loadRedis()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		App:      loadApp(),
 		Database: database,
 		Seed:     seed,
 		JWT:      jwt,
+		Redis:    redis,
 	}, nil
 }
 
@@ -39,6 +46,9 @@ func (c *Config) validate() error {
 		return err
 	}
 	if err := c.JWT.Validate(); err != nil {
+		return err
+	}
+	if err := c.Redis.Validate(); err != nil {
 		return err
 	}
 	return nil

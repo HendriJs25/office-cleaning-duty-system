@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -29,6 +30,25 @@ func NewRepository(client redislib.Cmdable) Repository {
 }
 
 func (r *repository) Set(ctx context.Context, accessToken string, session model.Session, ttl time.Duration) error {
+	payload, err := json.Marshal(session)
+	if err != nil {
+		return fmt.Errorf("encode session: %w", err)
+	}
+
+	sessionKey := sessionKey(accessToken)
+	indexKey := userSessionKey(session.UUID)
+
+	_, err = r.client.TxPipelined(ctx, func(pipe redislib.Pipeliner) error {
+		pipe.Set(ctx, sessionKey, payload, ttl)
+		pipe.SAdd(ctx, indexKey, sessionKey)
+		pipe.Expire(ctx, indexKey, ttl)
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("store session: %w", err)
+	}
+
 	return nil
 }
 

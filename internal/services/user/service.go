@@ -2,16 +2,20 @@ package user
 
 import (
 	errConstant "cleaning/internal/constants/error"
+	"cleaning/internal/domain/model"
+	sessionrepository "cleaning/internal/repository/session"
 	userrepository "cleaning/internal/repository/user"
 	"cleaning/internal/services/jwt"
 	"context"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type service struct {
-	userRepository userrepository.Repository
-	jwtService     jwt.Service
+	userRepository    userrepository.Repository
+	sessionRepository sessionrepository.Repository
+	jwtService        jwt.Service
 }
 
 type Service interface {
@@ -19,10 +23,11 @@ type Service interface {
 	Login(context.Context, LoginInput) (*LoginResult, error)
 }
 
-func NewService(userRepository userrepository.Repository, jwtService jwt.Service) Service {
+func NewService(userRepository userrepository.Repository, sessionRepository sessionrepository.Repository, jwtService jwt.Service) Service {
 	return &service{
-		userRepository: userRepository,
-		jwtService:     jwtService,
+		userRepository:    userRepository,
+		sessionRepository: sessionRepository,
+		jwtService:        jwtService,
 	}
 }
 
@@ -46,7 +51,8 @@ func (s *service) Authenticate(ctx context.Context, input AuthenticateInput) (*A
 	return &AuthenticatedUser{
 		UUID:     user.UUID,
 		Email:    user.Email,
-		RoleCode: user.Role.Code,
+		UserName: user.UserName,
+		RoleID:   user.RoleID,
 		RoleName: user.Role.Name,
 	}, nil
 
@@ -63,6 +69,22 @@ func (s *service) Login(ctx context.Context, input LoginInput) (*LoginResult, er
 
 	accessToken, err := s.jwtService.GenerateAccessToken(authenticatedUser.UUID)
 	if err != nil {
+		return nil, err
+	}
+
+	sessionCreatedAt := time.Now().UTC()
+
+	sessionTTL := accessToken.ExpiresAt.Sub(sessionCreatedAt)
+
+	session := model.Session{
+		UUID:      authenticatedUser.UUID,
+		UserName:  authenticatedUser.UserName,
+		Email:     authenticatedUser.Email,
+		RoleID:    authenticatedUser.RoleID,
+		CreatedAt: sessionCreatedAt,
+	}
+
+	if err := s.sessionRepository.Set(ctx, accessToken.Value, session, sessionTTL); err != nil {
 		return nil, err
 	}
 

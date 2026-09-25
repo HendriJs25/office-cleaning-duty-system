@@ -20,6 +20,7 @@ type AuthenticateInput struct {
 type AuthenticatedUser struct {
 	UUID     uuid.UUID
 	Email    string
-	RoleCode string
+	UserName string
+	RoleID   int64
 	RoleName string
 }

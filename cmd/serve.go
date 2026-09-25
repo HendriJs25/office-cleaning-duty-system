@@ -1,9 +1,13 @@
 package cmd
 
 import (
+	"cleaning/internal/common/validator"
 	"cleaning/internal/database"
 	"cleaning/internal/handler"
+	"cleaning/internal/repository"
+	"cleaning/internal/repository/session"
 	"cleaning/internal/routes"
+	"cleaning/internal/services"
 	"fmt"
 	"log/slog"
 
@@ -36,7 +40,27 @@ func runServer() error {
 		"port", cfg.Database.Port,
 		"name", cfg.Database.Name)
 
-	handlerRegistry := handler.NewRegistry()
+	redisDB, err := database.NewRedis(cfg.Redis)
+	if err != nil {
+		return fmt.Errorf("connect to redis failed: %w", err)
+	}
+
+	defer func() {
+		if err := redisDB.Close(); err != nil {
+			slog.Warn("failed to close redis connection", "error", err)
+		}
+	}()
+
+	slog.Info("redis connection established",
+		"host", cfg.Redis.Host,
+		"port", cfg.Redis.Port,
+		"database", cfg.Redis.DB)
+
+	sessionRepository := session.NewRepository(redisDB.Client)
+	repositoryRegistry := repository.NewRegistry(postgresDB.DB)
+	serviceRegistry := services.NewRegistry(repositoryRegistry, sessionRepository, cfg.JWT)
+	v := validator.New()
+	handlerRegistry := handler.NewRegistry(serviceRegistry, v)
 
 	router := gin.Default()
 	group := router.Group("api/v1")
