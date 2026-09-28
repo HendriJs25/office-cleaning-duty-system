@@ -14,5 +14,7 @@ func Register(router *gin.RouterGroup, authHandler *authHandler.Handler, roleHan
 
 	authenticated := router.Group("/auth")
 	authenticated.Use(authentication.Handle())
+	authenticated.POST("/logout", authHandler.Logout)
+
 	roleroutes.Register(authenticated, roleHandler)
 }

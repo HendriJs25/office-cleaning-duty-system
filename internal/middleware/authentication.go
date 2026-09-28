@@ -21,6 +21,7 @@ type Identity struct {
 	UserName string
 	Email    string
 	RoleID   int64
+	Token    string
 }
 
 type Authentication struct {
@@ -69,20 +70,25 @@ func (a *Authentication) Handle() gin.HandlerFunc {
 			UserName: session.UserName,
 			Email:    session.Email,
 			RoleID:   session.RoleID,
+			Token:    token,
 		})
 
 		c.Next()
 	}
 }
 
-func IdentityFromContext(c *gin.Context) (Identity, bool) {
+func RequireIdentity(c *gin.Context) (Identity, bool) {
 	value, exists := c.Get(authenticatedIdentityKey)
 	if !exists {
+		slog.Error("authenticated identity missing from context")
+		abortInternalServerError(c)
 		return Identity{}, false
 	}
 
 	identity, ok := value.(Identity)
 	if !ok {
+		slog.Error("invalid authenticated identity type")
+		abortInternalServerError(c)
 		return Identity{}, false
 	}
 
@@ -93,6 +99,12 @@ func abortUnauthorized(c *gin.Context) {
 	c.AbortWithStatusJSON(http.StatusUnauthorized, response.Response{
 		Status:  constants.Error,
 		Message: "認証が必要です。",
-		Data:    nil,
+	})
+}
+
+func abortInternalServerError(c *gin.Context) {
+	c.AbortWithStatusJSON(http.StatusInternalServerError, response.Response{
+		Status:  constants.Error,
+		Message: "サーバー内部でエラーが発生しました。",
 	})
 }

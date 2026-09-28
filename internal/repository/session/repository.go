@@ -24,6 +24,7 @@ type repository struct {
 type Repository interface {
 	Set(context.Context, string, model.Session, time.Duration) error
 	Get(context.Context, string) (*model.Session, error)
+	Delete(context.Context, string) error
 }
 
 func NewRepository(client redislib.Cmdable) Repository {
@@ -71,6 +72,17 @@ func (r *repository) Get(ctx context.Context, accessToken string) (*model.Sessio
 	return &session, nil
 }
 
+func (r *repository) Delete(ctx context.Context, accessToken string) error {
+	deleted, err := r.client.Del(ctx, sessionKey(accessToken)).Result()
+	if err != nil {
+		return fmt.Errorf("delete session: %w", err)
+	}
+	if deleted == 0 {
+		return errConstant.ErrNotFound
+	}
+	return nil
+}
+
 func sessionKey(accessToken string) string {
 	digest := sha256.Sum256([]byte(accessToken))
 
@@ -78,5 +90,5 @@ func sessionKey(accessToken string) string {
 }
 
 func userSessionKey(uuid uuid.UUID) string {
-	return fmt.Sprintf("user_session:%d", uuid)
+	return fmt.Sprintf("user_session:%s", uuid.String())
 }
