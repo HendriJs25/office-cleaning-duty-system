@@ -1,8 +1,9 @@
 package handler
 
 import (
+	userhandler "cleaning/internal/handler/auth"
 	healthhandler "cleaning/internal/handler/health"
-	userhandler "cleaning/internal/handler/user"
+	rolehandler "cleaning/internal/handler/role"
 	"cleaning/internal/services"
 
 	customValidator "github.com/go-playground/validator/v10"
@@ -10,12 +11,14 @@ import (
 
 type Register struct {
 	Health *healthhandler.Health
-	User   *userhandler.Handler
+	Auth   *userhandler.Handler
+	Role   *rolehandler.Handler
 }
 
 func NewRegistry(services *services.Registry, validate *customValidator.Validate) *Register {
 	return &Register{
 		Health: healthhandler.NewHandler(),
-		User:   userhandler.NewHandler(services.UserService, validate),
+		Auth:   userhandler.NewHandler(services.UserService, validate),
+		Role:   rolehandler.NewHandler(services.RoleService),
 	}
 }

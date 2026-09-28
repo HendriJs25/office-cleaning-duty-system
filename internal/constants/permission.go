@@ -1,10 +1,10 @@
 package constants
 
 const (
-	PermissionUserRead       = "user.read"
-	PermissionUserCreate     = "user.create"
-	PermissionUserUpdate     = "user.update"
-	PermissionUserDeactivate = "user.deactivate"
+	PermissionUserRead       = "auth.read"
+	PermissionUserCreate     = "auth.create"
+	PermissionUserUpdate     = "auth.update"
+	PermissionUserDeactivate = "auth.deactivate"
 
 	PermissionRoleRead             = "role.read"
 	PermissionRoleCreate           = "role.create"

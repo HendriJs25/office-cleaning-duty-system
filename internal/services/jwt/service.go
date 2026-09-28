@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"cleaning/internal/config"
+	errConstant "cleaning/internal/constants/error"
 	"fmt"
 	"time"
 
@@ -17,6 +18,7 @@ type service struct {
 
 type Service interface {
 	GenerateAccessToken(uuid.UUID) (*AccessToken, error)
+	ValidateAccessToken(string) (*AccessTokenClaims, error)
 }
 
 func NewService(cfg *config.JWT) Service {
@@ -51,5 +53,33 @@ func (s *service) GenerateAccessToken(userUUID uuid.UUID) (*AccessToken, error) 
 	return &AccessToken{
 		Value:     tokenString,
 		ExpiresAt: expiresAt,
+	}, nil
+}
+
+func (s *service) ValidateAccessToken(accessToken string) (*AccessTokenClaims, error) {
+	tokenClaims := &claims{}
+
+	token, err := jwtlib.ParseWithClaims(
+		accessToken,
+		tokenClaims,
+		func(token *jwtlib.Token) (any, error) { return s.secretKey, nil },
+		jwtlib.WithValidMethods([]string{jwtlib.SigningMethodHS256.Alg()}),
+		jwtlib.WithIssuer(s.issuer),
+		jwtlib.WithExpirationRequired(),
+		jwtlib.WithIssuedAt(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%w: validate access token: %v", errConstant.ErrInvalidToken, err)
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("%w: access token is invalid", errConstant.ErrInvalidToken)
+	}
+
+	return &AccessTokenClaims{
+		UserUUID:  tokenClaims.UserUUID,
+		Issuer:    tokenClaims.Issuer,
+		IssuedAt:  tokenClaims.IssuedAt.Time,
+		ExpiresAt: tokenClaims.ExpiresAt.Time,
 	}, nil
 }

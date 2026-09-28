@@ -1,15 +1,19 @@
 package cmd
 
 import (
+	"cleaning/internal/common/response"
 	"cleaning/internal/common/validator"
+	"cleaning/internal/constants"
 	"cleaning/internal/database"
 	"cleaning/internal/handler"
+	"cleaning/internal/middleware"
 	"cleaning/internal/repository"
 	"cleaning/internal/repository/session"
 	"cleaning/internal/routes"
 	"cleaning/internal/services"
 	"fmt"
 	"log/slog"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
@@ -61,10 +65,27 @@ func runServer() error {
 	serviceRegistry := services.NewRegistry(repositoryRegistry, sessionRepository, cfg.JWT)
 	v := validator.New()
 	handlerRegistry := handler.NewRegistry(serviceRegistry, v)
+	authenticationMiddleware := middleware.NewAuthentication(serviceRegistry.JWTService, sessionRepository)
 
-	router := gin.Default()
-	group := router.Group("api/v1")
-	routerRegistry := routes.NewRegistry(group, handlerRegistry)
+	router := gin.New()
+	router.Use(gin.Logger(), middleware.HandlePanic())
+	router.HandleMethodNotAllowed = true
+	router.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, response.Response{
+			Status:  constants.Error,
+			Message: "指定されたパスが見つかりません。",
+		})
+	})
+
+	router.NoMethod(func(c *gin.Context) {
+		c.JSON(http.StatusMethodNotAllowed, response.Response{
+			Status:  constants.Error,
+			Message: "指定されたHTTPメソッドは許可されていません。",
+		})
+	})
+
+	group := router.Group("/api/v1")
+	routerRegistry := routes.NewRegistry(group, handlerRegistry, authenticationMiddleware)
 	routerRegistry.Register()
 
 	slog.Info("starting cleaning app",

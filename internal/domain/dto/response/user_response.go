@@ -10,5 +10,5 @@ type UserResponse struct {
 }
 
 type LoginResponse struct {
-	User *UserResponse `json:"user"`
+	User *UserResponse `json:"auth"`
 }

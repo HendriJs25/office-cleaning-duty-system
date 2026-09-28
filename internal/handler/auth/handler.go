@@ -1,26 +1,28 @@
-package user
+package auth
 
 import (
+	"cleaning/internal/common/cookie"
 	errWrap "cleaning/internal/common/error"
 	"cleaning/internal/common/response"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
 	responsedto "cleaning/internal/domain/dto/response"
-	userservice "cleaning/internal/services/user"
+	authservice "cleaning/internal/services/auth"
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	customValidator "github.com/go-playground/validator/v10"
 )
 
 type Handler struct {
-	userService userservice.Service
+	userService authservice.Service
 	validate    *customValidator.Validate
 }
 
-func NewHandler(userService userservice.Service, validate *customValidator.Validate) *Handler {
+func NewHandler(userService authservice.Service, validate *customValidator.Validate) *Handler {
 	return &Handler{
 		userService: userService,
 		validate:    validate,
@@ -49,7 +51,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	result, err := h.userService.Login(c.Request.Context(), userservice.LoginInput{
+	result, err := h.userService.Login(c.Request.Context(), authservice.LoginInput{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -81,6 +83,10 @@ func (h *Handler) Login(c *gin.Context) {
 		}
 	}
 
+	cookieCreatedAt := time.Now().UTC()
+	cookieTTL := result.AccessToken.ExpiresAt.Sub(cookieCreatedAt)
+	cookie.SetAccessToken(c, result.AccessToken.Value, cookieTTL)
+
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code: http.StatusOK,
 		Data: responsedto.LoginResponse{
@@ -91,7 +97,6 @@ func (h *Handler) Login(c *gin.Context) {
 				RoleName: result.User.RoleName,
 			},
 		},
-		Token: &result.Token,
-		Gin:   c,
+		Gin: c,
 	})
 }
