@@ -7,6 +7,7 @@ import (
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
 	responsedto "cleaning/internal/domain/dto/response"
+	"cleaning/internal/middleware"
 	authservice "cleaning/internal/services/auth"
 	"errors"
 	"log/slog"
@@ -18,13 +19,13 @@ import (
 )
 
 type Handler struct {
-	userService authservice.Service
+	authService authservice.Service
 	validate    *customValidator.Validate
 }
 
 func NewHandler(userService authservice.Service, validate *customValidator.Validate) *Handler {
 	return &Handler{
-		userService: userService,
+		authService: userService,
 		validate:    validate,
 	}
 }
@@ -51,7 +52,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	result, err := h.userService.Login(c.Request.Context(), authservice.LoginInput{
+	result, err := h.authService.Login(c.Request.Context(), authservice.LoginInput{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -98,5 +99,30 @@ func (h *Handler) Login(c *gin.Context) {
 			},
 		},
 		Gin: c,
+	})
+}
+
+func (h *Handler) Logout(c *gin.Context) {
+	identity, ok := middleware.RequireIdentity(c)
+	if !ok {
+		return
+	}
+
+	err := h.authService.Logout(c.Request.Context(), identity.Token)
+	if err != nil {
+		slog.Error("logout failed", "error", err)
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code: http.StatusInternalServerError,
+			Err:  errConstant.ErrInternalServerError,
+			Gin:  c,
+		})
+	}
+
+	cookie.ClearAccessToken(c)
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "ログアウトしました。",
+		Gin:     c,
 	})
 }

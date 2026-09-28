@@ -21,6 +21,7 @@ type service struct {
 type Service interface {
 	Authenticate(context.Context, AuthenticateInput) (*AuthenticatedUser, error)
 	Login(context.Context, LoginInput) (*LoginResult, error)
+	Logout(context.Context, string) error
 }
 
 func NewService(userRepository userrepository.Repository, sessionRepository sessionrepository.Repository, jwtService jwt.Service) Service {
@@ -93,4 +94,8 @@ func (s *service) Login(ctx context.Context, input LoginInput) (*LoginResult, er
 		User:        *authenticatedUser,
 	}, nil
 
+}
+
+func (s *service) Logout(ctx context.Context, accessToken string) error {
+	return s.sessionRepository.Delete(ctx, accessToken)
 }
