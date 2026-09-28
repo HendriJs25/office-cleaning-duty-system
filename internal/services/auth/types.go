@@ -1,6 +1,10 @@
-package user
+package auth
 
-import "github.com/google/uuid"
+import (
+	"cleaning/internal/services/jwt"
+
+	"github.com/google/uuid"
+)
 
 type LoginInput struct {
 	Email    string
@@ -8,8 +12,8 @@ type LoginInput struct {
 }
 
 type LoginResult struct {
-	Token string
-	User  AuthenticatedUser
+	AccessToken *jwt.AccessToken
+	User        AuthenticatedUser
 }
 
 type AuthenticateInput struct {

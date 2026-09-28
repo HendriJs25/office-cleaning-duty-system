@@ -30,7 +30,7 @@ func seedAdmin(tx *gorm.DB, adminRole model.Role, cfg *config.Seed) error {
 
 		if len(updates) > 0 {
 			if err := tx.Unscoped().Model(&admin).Updates(updates).Error; err != nil {
-				return fmt.Errorf("restore admin user: %w", err)
+				return fmt.Errorf("restore admin auth: %w", err)
 			}
 		}
 
@@ -50,11 +50,11 @@ func seedAdmin(tx *gorm.DB, adminRole model.Role, cfg *config.Seed) error {
 		}
 
 		if err := tx.Create(&admin).Error; err != nil {
-			return fmt.Errorf("create admin user: %w", err)
+			return fmt.Errorf("create admin auth: %w", err)
 		}
 
 	default:
-		return fmt.Errorf("find admin user: %w", err)
+		return fmt.Errorf("find admin auth: %w", err)
 
 	}
 	return nil

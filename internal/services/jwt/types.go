@@ -17,3 +17,10 @@ type claims struct {
 
 	jwtlib.RegisteredClaims
 }
+
+type AccessTokenClaims struct {
+	UserUUID  uuid.UUID
+	Issuer    string
+	IssuedAt  time.Time
+	ExpiresAt time.Time
+}

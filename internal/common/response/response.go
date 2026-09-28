@@ -9,10 +9,9 @@ import (
 )
 
 type Response struct {
-	Status  string  `json:"status"`
-	Message any     `json:"message,omitempty"`
-	Data    any     `json:"data"`
-	Token   *string `json:"token,omitempty"`
+	Status  string `json:"status"`
+	Message any    `json:"message,omitempty"`
+	Data    any    `json:"data"`
 }
 
 type ParamHTTPResponse struct {
@@ -21,7 +20,6 @@ type ParamHTTPResponse struct {
 	Message any
 	Gin     *gin.Context
 	Data    any
-	Token   *string
 }
 
 func HTTPResponse(param ParamHTTPResponse) {
@@ -30,7 +28,6 @@ func HTTPResponse(param ParamHTTPResponse) {
 			Status:  constants.Success,
 			Message: param.Message,
 			Data:    param.Data,
-			Token:   param.Token,
 		})
 		return
 	}
@@ -55,6 +52,8 @@ func messageJa(err error) string {
 		return "メールアドレスまたはパスワードが正しくありません。"
 	case errors.Is(err, errConstant.ErrAccountIsDeactivated):
 		return "このアカウントは無効化されています。管理者にお問い合わせください。"
+	case errors.Is(err, errConstant.ErrNotFound):
+		return "該当するデータがありません。"
 	default:
 		return "サーバー内部でエラーが発生しました。"
 	}

@@ -1,4 +1,4 @@
-package user
+package auth
 
 import (
 	errConstant "cleaning/internal/constants/error"
@@ -89,8 +89,8 @@ func (s *service) Login(ctx context.Context, input LoginInput) (*LoginResult, er
 	}
 
 	return &LoginResult{
-		Token: accessToken.Value,
-		User:  *authenticatedUser,
+		AccessToken: accessToken,
+		User:        *authenticatedUser,
 	}, nil
 
 }
