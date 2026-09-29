@@ -27,5 +27,5 @@ func NewRegistry(router *gin.RouterGroup, handlers *handler.Register, authentica
 
 func (r *Register) Register() {
 	healthroutes.Register(r.router, r.handlers.Health)
-	authroutes.Register(r.router, r.handlers.Auth, r.handlers.Role, r.authentication, r.authorization)
+	authroutes.Register(r.router, r.handlers.Auth, r.handlers.Role, r.handlers.User, r.authentication, r.authorization)
 }

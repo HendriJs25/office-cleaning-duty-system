@@ -1,12 +1,19 @@
 package response
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type UserResponse struct {
-	UUID     uuid.UUID `json:"uuid"`
-	Email    string    `json:"email"`
-	Username string    `json:"user_name"`
-	RoleName string    `json:"role_name"`
+	UserID      int64      `json:"user_id"`
+	UUID        uuid.UUID  `json:"uuid"`
+	Username    string     `json:"user_name"`
+	Email       string     `json:"email"`
+	IsActive    *bool      `json:"is_active,omitempty"`
+	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
+	RoleName    string     `json:"role_name"`
 }
 
 type LoginResponse struct {
