@@ -1,7 +1,7 @@
-package auth
+package email
 
 import "strings"
 
-func normalizeEmail(email string) string {
+func Normalize(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }

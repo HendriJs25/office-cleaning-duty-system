@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"cleaning/internal/common/email"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
 	sessionrepository "cleaning/internal/repository/session"
@@ -33,9 +34,9 @@ func NewService(userRepository userrepository.Repository, sessionRepository sess
 }
 
 func (s *service) Authenticate(ctx context.Context, input AuthenticateInput) (*AuthenticatedUser, error) {
-	email := normalizeEmail(input.Email)
+	normalizedEmail := email.Normalize(input.Email)
 
-	user, err := s.userRepository.FindByEmail(ctx, email)
+	user, err := s.userRepository.FindByEmail(ctx, normalizedEmail)
 	if err != nil {
 		return nil, err
 	}

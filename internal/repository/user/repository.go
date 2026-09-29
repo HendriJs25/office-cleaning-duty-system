@@ -20,6 +20,7 @@ type Repository interface {
 	FindAll(context.Context) ([]model.User, error)
 	FindByEmail(context.Context, string) (*model.User, error)
 	ExistByEmail(context.Context, string) (bool, error)
+	Create(context.Context, *model.User) error
 	UpdateLastLoginAt(context.Context, uuid.UUID) error
 }
 
@@ -31,7 +32,7 @@ func NewRepository(db *gorm.DB) Repository {
 
 func (r *repository) FindAll(ctx context.Context) ([]model.User, error) {
 	var users []model.User
-	if err := r.db.WithContext(ctx).Preload("Role").Find(&users).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Role").Order("id ASC").Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("get all users: %w", err)
 	}
 	return users, nil
@@ -43,7 +44,7 @@ func (r *repository) FindByEmail(ctx context.Context, email string) (*model.User
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errConstant.ErrNotFound
 		}
-		return nil, fmt.Errorf("find auth by email: %w", err)
+		return nil, fmt.Errorf("find user by email: %w", err)
 	}
 	return &user, nil
 }
@@ -51,9 +52,16 @@ func (r *repository) FindByEmail(ctx context.Context, email string) (*model.User
 func (r *repository) ExistByEmail(ctx context.Context, email string) (bool, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Model(model.User{}).Where("email = ?", email).Count(&count).Error; err != nil {
-		return false, fmt.Errorf("is auth exist: %w", err)
+		return false, fmt.Errorf("is email exist: %w", err)
 	}
 	return count > 0, nil
+}
+
+func (r *repository) Create(ctx context.Context, user *model.User) error {
+	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
+		return fmt.Errorf("create user: %w", err)
+	}
+	return nil
 }
 
 func (r *repository) UpdateLastLoginAt(ctx context.Context, userUUID uuid.UUID) error {

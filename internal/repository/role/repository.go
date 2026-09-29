@@ -1,10 +1,9 @@
 package role
 
 import (
-	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
 	"context"
-	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -15,6 +14,7 @@ type repository struct {
 
 type Repository interface {
 	FindAll(context.Context) ([]model.Role, error)
+	ExistByID(context.Context, int64) (bool, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -26,12 +26,18 @@ func NewRepository(db *gorm.DB) Repository {
 func (r *repository) FindAll(ctx context.Context) ([]model.Role, error) {
 	var roles []model.Role
 
-	err := r.db.WithContext(ctx).Find(&roles).Error
+	err := r.db.WithContext(ctx).Order("id ASC").Find(&roles).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return []model.Role{}, errConstant.ErrNotFound
-		}
-		return []model.Role{}, err
+		return nil, err
 	}
 	return roles, nil
+}
+
+func (r *repository) ExistByID(ctx context.Context, roleID int64) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(model.Role{}).Where("id = ?", roleID).Count(&count).Error
+	if err != nil {
+		return false, fmt.Errorf("exist role by id: %w", err)
+	}
+	return count > 0, nil
 }

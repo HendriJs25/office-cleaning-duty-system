@@ -27,12 +27,25 @@ func New() *validator.Validate {
 		return name
 	})
 
-	if err := v.RegisterValidation("validpassword", validPassword); err != nil {
-		slog.Error("custom validator failed to register", "error", err)
-		os.Exit(1)
-	}
+	registerCustomValidators(v)
 
 	return v
+}
+
+func registerCustomValidators(v *validator.Validate) {
+	validations := map[string]validator.Func{
+		"validpassword": validPassword,
+		"notblank":      notBlank,
+	}
+
+	for tag, fn := range validations {
+		if err := v.RegisterValidation(tag, fn); err != nil {
+			slog.Error("custom validator failed to register",
+				"tag", tag,
+				"error", err)
+			os.Exit(1)
+		}
+	}
 }
 
 func validPassword(f1 validator.FieldLevel) bool {
@@ -42,4 +55,8 @@ func validPassword(f1 validator.FieldLevel) bool {
 		lowerRegex.MatchString(password) &&
 		upperRegex.MatchString(password) &&
 		numberRegex.MatchString(password)
+}
+
+func notBlank(f1 validator.FieldLevel) bool {
+	return strings.TrimSpace(f1.Field().String()) != ""
 }

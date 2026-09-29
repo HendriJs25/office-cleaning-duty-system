@@ -25,6 +25,10 @@ func (s *service) GetAll(ctx context.Context) ([]RoleResult, error) {
 		return nil, err
 	}
 
+	if len(roles) == 0 {
+		return []RoleResult{}, nil
+	}
+
 	var result []RoleResult
 
 	for _, role := range roles {

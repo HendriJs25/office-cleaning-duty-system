@@ -54,6 +54,8 @@ func messageJa(err error) string {
 		return "このアカウントは無効化されています。管理者にお問い合わせください。"
 	case errors.Is(err, errConstant.ErrNotFound):
 		return "該当するデータがありません。"
+	case errors.Is(err, errConstant.ErrBadRequest):
+		return "入力内容に誤りがあります。"
 	default:
 		return "サーバー内部でエラーが発生しました。"
 	}

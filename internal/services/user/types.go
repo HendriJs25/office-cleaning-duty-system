@@ -15,3 +15,11 @@ type GetUserResult struct {
 	LastLoginAt *time.Time
 	RoleName    string
 }
+
+type CreateUserInput struct {
+	RoleID     int64
+	EmployeeID *int64
+	UserName   string
+	Email      string
+	Password   string
+}

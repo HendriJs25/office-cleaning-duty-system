@@ -2,10 +2,8 @@ package role
 
 import (
 	"cleaning/internal/common/response"
-	errConstant "cleaning/internal/constants/error"
 	responsedto "cleaning/internal/domain/dto/response"
 	roleservice "cleaning/internal/services/role"
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -25,24 +23,24 @@ func NewHandler(roleService roleservice.Service) *Handler {
 func (h *Handler) GetAll(c *gin.Context) {
 	result, err := h.roleService.GetAll(c.Request.Context())
 	if err != nil {
-		switch {
-		case errors.Is(err, errConstant.ErrNotFound):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusOK,
-				Data: nil,
-				Gin:  c,
-			})
-			return
-		default:
-			slog.Error("get all roles failed", "error", err)
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-				Data: nil,
-				Gin:  c,
-			})
-			return
-		}
+		slog.Error("get all roles failed", "error", err)
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code: http.StatusInternalServerError,
+			Err:  err,
+			Data: nil,
+			Gin:  c,
+		})
+		return
+	}
+
+	if len(result) == 0 {
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code:    http.StatusOK,
+			Message: "データがありません。",
+			Data:    nil,
+			Gin:     c,
+		})
+		return
 	}
 
 	var roles []responsedto.RoleResponse
