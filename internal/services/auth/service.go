@@ -89,6 +89,11 @@ func (s *service) Login(ctx context.Context, input LoginInput) (*LoginResult, er
 		return nil, err
 	}
 
+	err = s.userRepository.UpdateLastLoginAt(ctx, authenticatedUser.UUID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &LoginResult{
 		AccessToken: accessToken,
 		User:        *authenticatedUser,

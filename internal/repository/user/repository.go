@@ -6,7 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +19,7 @@ type repository struct {
 type Repository interface {
 	FindByEmail(context.Context, string) (*model.User, error)
 	ExistByEmail(context.Context, string) (bool, error)
+	UpdateLastLoginAt(context.Context, uuid.UUID) error
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -42,4 +45,12 @@ func (r *repository) ExistByEmail(ctx context.Context, email string) (bool, erro
 		return false, fmt.Errorf("is auth exist: %w", err)
 	}
 	return count > 0, nil
+}
+
+func (r *repository) UpdateLastLoginAt(ctx context.Context, userUUID uuid.UUID) error {
+	err := r.db.WithContext(ctx).Model(&model.User{}).Where("uuid = ?", userUUID).Update("last_login_at", time.Now().UTC()).Error
+	if err != nil {
+		return fmt.Errorf("update last login at: %w", err)
+	}
+	return nil
 }
