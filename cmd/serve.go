@@ -8,6 +8,7 @@ import (
 	"cleaning/internal/handler"
 	"cleaning/internal/middleware"
 	"cleaning/internal/repository"
+	"cleaning/internal/repository/permissioncache"
 	"cleaning/internal/repository/session"
 	"cleaning/internal/routes"
 	"cleaning/internal/services"
@@ -61,8 +62,9 @@ func runServer() error {
 		"database", cfg.Redis.DB)
 
 	sessionRepository := session.NewRepository(redisDB.Client)
+	permissionCacheRepository := permissioncache.NewRepository(redisDB.Client)
 	repositoryRegistry := repository.NewRegistry(postgresDB.DB)
-	serviceRegistry := services.NewRegistry(repositoryRegistry, sessionRepository, cfg.JWT)
+	serviceRegistry := services.NewRegistry(repositoryRegistry, sessionRepository, permissionCacheRepository, cfg.JWT)
 	v := validator.New()
 	handlerRegistry := handler.NewRegistry(serviceRegistry, v)
 	authenticationMiddleware := middleware.NewAuthentication(serviceRegistry.JWTService, sessionRepository)

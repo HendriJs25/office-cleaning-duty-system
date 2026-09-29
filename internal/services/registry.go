@@ -3,6 +3,7 @@ package services
 import (
 	"cleaning/internal/config"
 	"cleaning/internal/repository"
+	permissioncacherepository "cleaning/internal/repository/permissioncache"
 	sessionrepository "cleaning/internal/repository/session"
 	userservice "cleaning/internal/services/auth"
 	jwtservice "cleaning/internal/services/jwt"
@@ -17,13 +18,13 @@ type Registry struct {
 	PermissionService permissionservice.Service
 }
 
-func NewRegistry(repositories *repository.Registry, sessionRepository sessionrepository.Repository, jwtConfig *config.JWT) *Registry {
+func NewRegistry(repositories *repository.Registry, sessionRepository sessionrepository.Repository, permissionCacheRepository permissioncacherepository.Repository, jwtConfig *config.JWT) *Registry {
 	jwtService := jwtservice.NewService(jwtConfig)
 
 	return &Registry{
 		UserService:       userservice.NewService(repositories.User, sessionRepository, jwtService),
 		JWTService:        jwtService,
 		RoleService:       roleservice.NewService(repositories.Role),
-		PermissionService: permissionservice.NewService(repositories.Permission),
+		PermissionService: permissionservice.NewService(repositories.Permission, permissionCacheRepository),
 	}
 }
