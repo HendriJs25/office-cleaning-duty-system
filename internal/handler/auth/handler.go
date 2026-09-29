@@ -92,6 +92,7 @@ func (h *Handler) Login(c *gin.Context) {
 		Code: http.StatusOK,
 		Data: responsedto.LoginResponse{
 			User: &responsedto.UserResponse{
+				UserID:   result.User.UserID,
 				UUID:     result.User.UUID,
 				Email:    result.User.Email,
 				Username: result.User.UserName,

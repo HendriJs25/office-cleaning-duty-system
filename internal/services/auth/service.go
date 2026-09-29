@@ -50,6 +50,7 @@ func (s *service) Authenticate(ctx context.Context, input AuthenticateInput) (*A
 	}
 
 	return &AuthenticatedUser{
+		UserID:   user.ID,
 		UUID:     user.UUID,
 		Email:    user.Email,
 		UserName: user.UserName,

@@ -17,6 +17,7 @@ type repository struct {
 }
 
 type Repository interface {
+	FindAll(context.Context) ([]model.User, error)
 	FindByEmail(context.Context, string) (*model.User, error)
 	ExistByEmail(context.Context, string) (bool, error)
 	UpdateLastLoginAt(context.Context, uuid.UUID) error
@@ -26,6 +27,14 @@ func NewRepository(db *gorm.DB) Repository {
 	return &repository{
 		db: db,
 	}
+}
+
+func (r *repository) FindAll(ctx context.Context) ([]model.User, error) {
+	var users []model.User
+	if err := r.db.WithContext(ctx).Preload("Role").Find(&users).Error; err != nil {
+		return nil, fmt.Errorf("get all users: %w", err)
+	}
+	return users, nil
 }
 
 func (r *repository) FindByEmail(ctx context.Context, email string) (*model.User, error) {
