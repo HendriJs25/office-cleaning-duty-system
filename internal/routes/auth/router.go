@@ -9,12 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(router *gin.RouterGroup, authHandler *authHandler.Handler, roleHandler *rolehandler.Handler, authentication *middleware.Authentication) {
+func Register(router *gin.RouterGroup, authHandler *authHandler.Handler, roleHandler *rolehandler.Handler, authentication *middleware.Authentication, authorization *middleware.Authorization) {
 	router.POST("/login", authHandler.Login)
 
 	authenticated := router.Group("/auth")
 	authenticated.Use(authentication.Handle())
 	authenticated.POST("/logout", authHandler.Logout)
 
-	roleroutes.Register(authenticated, roleHandler)
+	roleroutes.Register(authenticated, roleHandler, authorization)
 }
