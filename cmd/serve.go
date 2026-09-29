@@ -66,6 +66,7 @@ func runServer() error {
 	v := validator.New()
 	handlerRegistry := handler.NewRegistry(serviceRegistry, v)
 	authenticationMiddleware := middleware.NewAuthentication(serviceRegistry.JWTService, sessionRepository)
+	authorizationMiddleware := middleware.NewAuthorization(serviceRegistry.PermissionService)
 
 	router := gin.New()
 	router.Use(gin.Logger(), middleware.HandlePanic())
@@ -85,7 +86,7 @@ func runServer() error {
 	})
 
 	group := router.Group("/api/v1")
-	routerRegistry := routes.NewRegistry(group, handlerRegistry, authenticationMiddleware)
+	routerRegistry := routes.NewRegistry(group, handlerRegistry, authenticationMiddleware, authorizationMiddleware)
 	routerRegistry.Register()
 
 	slog.Info("starting cleaning app",

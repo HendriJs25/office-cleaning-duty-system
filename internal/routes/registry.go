@@ -13,17 +13,19 @@ type Register struct {
 	router         *gin.RouterGroup
 	handlers       *handler.Register
 	authentication *middleware.Authentication
+	authorization  *middleware.Authorization
 }
 
-func NewRegistry(router *gin.RouterGroup, handlers *handler.Register, authentication *middleware.Authentication) *Register {
+func NewRegistry(router *gin.RouterGroup, handlers *handler.Register, authentication *middleware.Authentication, authorization *middleware.Authorization) *Register {
 	return &Register{
 		router:         router,
 		handlers:       handlers,
 		authentication: authentication,
+		authorization:  authorization,
 	}
 }
 
 func (r *Register) Register() {
 	healthroutes.Register(r.router, r.handlers.Health)
-	authroutes.Register(r.router, r.handlers.Auth, r.handlers.Role, r.authentication)
+	authroutes.Register(r.router, r.handlers.Auth, r.handlers.Role, r.authentication, r.authorization)
 }

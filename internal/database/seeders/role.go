@@ -12,16 +12,19 @@ import (
 func seedRoles(tx *gorm.DB) (map[string]model.Role, error) {
 	roleSeeds := []model.Role{
 		{
-			Code: constants.AdminRoleCode,
-			Name: "管理者",
+			Code:     constants.AdminRoleCode,
+			Name:     "管理者",
+			IsActive: true,
 		},
 		{
-			Code: constants.EditorRoleCode,
-			Name: "編集者",
+			Code:     constants.EditorRoleCode,
+			Name:     "編集者",
+			IsActive: true,
 		},
 		{
-			Code: constants.ViewerRoleCode,
-			Name: "閲覧者",
+			Code:     constants.ViewerRoleCode,
+			Name:     "閲覧者",
+			IsActive: true,
 		},
 	}
 
