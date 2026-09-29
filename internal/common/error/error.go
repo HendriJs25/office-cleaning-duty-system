@@ -14,13 +14,18 @@ type ValidationResponse struct {
 }
 
 var ErrValidator = map[string]string{
-	"required": "%sは必須です",
-	"email":    "%sの形式は正しくありません",
+	"required":      "%sは必須です",
+	"email":         "%sの形式は正しくありません",
+	"max":           "%sは%s文字以内で入力してください",
+	"validpassword": "%sは8文字以上で、大文字・小文字・数字をそれぞれ1文字以上含めてください",
+	"eqfield":       "%sがパスワードと一致していません",
 }
 
 var FieldNameJa = map[string]string{
-	"email":    "メールアドレス",
-	"password": "パスワード",
+	"email":            "メールアドレス",
+	"password":         "パスワード",
+	"user_name":        "ユーザー名",
+	"password_confirm": "パスワード確認",
 }
 
 func ErrValidationResponse(err error) (validationResponse []ValidationResponse) {
