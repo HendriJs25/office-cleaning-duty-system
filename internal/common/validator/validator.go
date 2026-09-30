@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	lowerRegex  = regexp.MustCompile(`[a-z]`)
-	upperRegex  = regexp.MustCompile(`[A-Z]`)
-	numberRegex = regexp.MustCompile(`[0-9]`)
+	lowerRegex           = regexp.MustCompile(`[a-z]`)
+	upperRegex           = regexp.MustCompile(`[A-Z]`)
+	numberRegex          = regexp.MustCompile(`[0-9]`)
+	lowercaseHyphenRegex = regexp.MustCompile(`^[a-z-]+$`)
 )
 
 func New() *validator.Validate {
@@ -34,8 +35,9 @@ func New() *validator.Validate {
 
 func registerCustomValidators(v *validator.Validate) {
 	validations := map[string]validator.Func{
-		"validpassword": validPassword,
-		"notblank":      notBlank,
+		"validpassword":    validPassword,
+		"notblank":         notBlank,
+		"lowercase_hyphen": lowercaseHyphen,
 	}
 
 	for tag, fn := range validations {
@@ -59,4 +61,8 @@ func validPassword(f1 validator.FieldLevel) bool {
 
 func notBlank(f1 validator.FieldLevel) bool {
 	return strings.TrimSpace(f1.Field().String()) != ""
+}
+
+func lowercaseHyphen(f1 validator.FieldLevel) bool {
+	return lowerRegex.MatchString(f1.Field().String())
 }
