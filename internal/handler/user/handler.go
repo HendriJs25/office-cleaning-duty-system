@@ -239,3 +239,50 @@ func (h *Handler) DeactivateUser(c *gin.Context) {
 		Gin:     c,
 	})
 }
+
+func (h *Handler) ActivateUser(c *gin.Context) {
+	uuidStr := c.Param("uuid")
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code: http.StatusBadRequest,
+			Err:  errConstant.ErrBadRequest,
+			Gin:  c,
+		})
+		return
+	}
+
+	err = h.UserService.ActivateUser(c.Request.Context(), parsedUUID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code: http.StatusNotFound,
+				Err:  errConstant.ErrNotFound,
+				Gin:  c,
+			})
+			return
+		case errors.Is(err, errConstant.ErrAlreadyActivated):
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code: http.StatusConflict,
+				Err:  errConstant.ErrAlreadyActivated,
+				Gin:  c,
+			})
+			return
+		default:
+			slog.Error("activate user failed", "uuid", parsedUUID, "error", err)
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code: http.StatusInternalServerError,
+				Err:  err,
+				Gin:  c,
+			})
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "ユーザーを効化しました",
+		Gin:     c,
+	})
+}
