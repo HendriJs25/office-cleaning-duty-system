@@ -23,6 +23,7 @@ type Repository interface {
 	ExistByEmail(context.Context, string) (bool, error)
 	Create(context.Context, *model.User) error
 	UpdateLastLoginAt(context.Context, uuid.UUID) error
+	UpdateStatus(context.Context, uuid.UUID, bool) error
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -80,6 +81,14 @@ func (r *repository) UpdateLastLoginAt(ctx context.Context, userUUID uuid.UUID) 
 	err := r.db.WithContext(ctx).Model(&model.User{}).Where("uuid = ?", userUUID).Update("last_login_at", time.Now().UTC()).Error
 	if err != nil {
 		return fmt.Errorf("update last login at: %w", err)
+	}
+	return nil
+}
+
+func (r *repository) UpdateStatus(ctx context.Context, userUUID uuid.UUID, status bool) error {
+	err := r.db.WithContext(ctx).Model(&model.User{}).Where("uuid = ?", userUUID).Update("is_active", status).Error
+	if err != nil {
+		return fmt.Errorf("update status: %w", err)
 	}
 	return nil
 }

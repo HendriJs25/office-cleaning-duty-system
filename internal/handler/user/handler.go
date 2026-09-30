@@ -85,6 +85,7 @@ func (h *Handler) GetUserDetail(c *gin.Context) {
 			})
 			return
 		default:
+			slog.Error("get user detail failed", "uuid", parsedUUID, "error", err)
 			response.HTTPResponse(response.ParamHTTPResponse{
 				Code: http.StatusInternalServerError,
 				Err:  err,
@@ -159,15 +160,17 @@ func (h *Handler) Create(c *gin.Context) {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
 			response.HTTPResponse(response.ParamHTTPResponse{
-				Code:    http.StatusOK,
+				Code:    http.StatusUnprocessableEntity,
 				Message: "ロールがありません。",
+				Err:     err,
 				Gin:     c,
 			})
 			return
 		case errors.Is(err, errConstant.ErrAlreadyExists):
 			response.HTTPResponse(response.ParamHTTPResponse{
-				Code:    http.StatusOK,
+				Code:    http.StatusConflict,
 				Message: "このメールアドレスは既に登録されています。",
+				Err:     err,
 				Gin:     c,
 			})
 			return
@@ -186,6 +189,53 @@ func (h *Handler) Create(c *gin.Context) {
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code:    http.StatusOK,
 		Message: "ユーザーを作成しました。",
+		Gin:     c,
+	})
+}
+
+func (h *Handler) DeactivateUser(c *gin.Context) {
+	uuidStr := c.Param("uuid")
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code: http.StatusBadRequest,
+			Err:  errConstant.ErrBadRequest,
+			Gin:  c,
+		})
+		return
+	}
+
+	err = h.UserService.DeactivateUser(c.Request.Context(), parsedUUID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code: http.StatusNotFound,
+				Err:  errConstant.ErrNotFound,
+				Gin:  c,
+			})
+			return
+		case errors.Is(err, errConstant.ErrAlreadyDeactivated):
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code: http.StatusConflict,
+				Err:  errConstant.ErrAlreadyDeactivated,
+				Gin:  c,
+			})
+			return
+		default:
+			slog.Error("deactivate user failed", "uuid", parsedUUID, "error", err)
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code: http.StatusInternalServerError,
+				Err:  err,
+				Gin:  c,
+			})
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "ユーザーを無効化しました",
 		Gin:     c,
 	})
 }
