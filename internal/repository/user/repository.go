@@ -19,6 +19,7 @@ type repository struct {
 type Repository interface {
 	FindAll(context.Context) ([]model.User, error)
 	FindByEmail(context.Context, string) (*model.User, error)
+	FindByUUID(context.Context, uuid.UUID) (*model.User, error)
 	ExistByEmail(context.Context, string) (bool, error)
 	Create(context.Context, *model.User) error
 	UpdateLastLoginAt(context.Context, uuid.UUID) error
@@ -32,7 +33,7 @@ func NewRepository(db *gorm.DB) Repository {
 
 func (r *repository) FindAll(ctx context.Context) ([]model.User, error) {
 	var users []model.User
-	if err := r.db.WithContext(ctx).Preload("Role").Order("id ASC").Find(&users).Error; err != nil {
+	if err := r.db.WithContext(ctx).Joins("Role").Order("id ASC").Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("get all users: %w", err)
 	}
 	return users, nil
@@ -45,6 +46,17 @@ func (r *repository) FindByEmail(ctx context.Context, email string) (*model.User
 			return nil, errConstant.ErrNotFound
 		}
 		return nil, fmt.Errorf("find user by email: %w", err)
+	}
+	return &user, nil
+}
+
+func (r *repository) FindByUUID(ctx context.Context, uuid uuid.UUID) (*model.User, error) {
+	var user model.User
+	if err := r.db.WithContext(ctx).Joins("Role").Joins("Employee").Joins("Employee.Office").Where("users.uuid = ?", uuid).Take(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("find user by uuid: %w", err)
 	}
 	return &user, nil
 }

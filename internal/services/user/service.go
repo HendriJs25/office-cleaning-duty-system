@@ -20,6 +20,7 @@ type service struct {
 
 type Service interface {
 	GetAll(context.Context) ([]GetUserResult, error)
+	GetUserDetail(context.Context, uuid.UUID) (*GetUserDetailResult, error)
 	Create(context.Context, CreateUserInput) error
 }
 
@@ -39,7 +40,7 @@ func (s *service) GetAll(ctx context.Context) ([]GetUserResult, error) {
 	var result []GetUserResult
 	for _, user := range users {
 		result = append(result, GetUserResult{
-			UserID:      user.ID,
+			ID:          user.ID,
 			UUID:        user.UUID,
 			UserName:    user.UserName,
 			Email:       user.Email,
@@ -49,6 +50,37 @@ func (s *service) GetAll(ctx context.Context) ([]GetUserResult, error) {
 		})
 	}
 	return result, nil
+}
+
+func (s *service) GetUserDetail(ctx context.Context, uuid uuid.UUID) (*GetUserDetailResult, error) {
+	user, err := s.userRepository.FindByUUID(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	var employee *EmployeeInfo
+	if user.Employee != nil {
+		employee = &EmployeeInfo{
+			ID:                  user.Employee.ID,
+			UUID:                user.Employee.UUID,
+			OfficeName:          user.Employee.Office.Name,
+			FullName:            fmt.Sprintf("%s %s", user.Employee.FamilyName, user.Employee.GivenName),
+			EmploymentStartDate: user.Employee.EmploymentStartDate,
+		}
+	}
+
+	return &GetUserDetailResult{
+		User: GetUserResult{
+			ID:          user.ID,
+			UUID:        user.UUID,
+			UserName:    user.UserName,
+			Email:       user.Email,
+			IsActive:    user.IsActive,
+			LastLoginAt: user.LastLoginAt,
+			RoleName:    user.Role.Name,
+		},
+		Employee: employee,
+	}, nil
 }
 
 func (s *service) Create(ctx context.Context, createInput CreateUserInput) error {

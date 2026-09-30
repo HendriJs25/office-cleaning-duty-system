@@ -22,7 +22,7 @@ type AuthenticateInput struct {
 }
 
 type AuthenticatedUser struct {
-	UserID   int64
+	ID       int64
 	UUID     uuid.UUID
 	Email    string
 	UserName string
