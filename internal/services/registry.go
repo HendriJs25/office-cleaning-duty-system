@@ -28,6 +28,6 @@ func NewRegistry(repositories *repository.Registry, sessionRepository sessionrep
 		JWTService:        jwtService,
 		RoleService:       roleservice.NewService(repositories.Role),
 		PermissionService: permissionservice.NewService(repositories.Permission, permissionCacheRepository),
-		UserService:       userservice.NewService(repositories.User, repositories.Role),
+		UserService:       userservice.NewService(repositories.User, repositories.Role, sessionRepository),
 	}
 }

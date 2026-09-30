@@ -25,6 +25,7 @@ type Repository interface {
 	Set(context.Context, string, model.Session, time.Duration) error
 	Get(context.Context, string) (*model.Session, error)
 	Delete(context.Context, string) error
+	DeleteByUserUUID(context.Context, uuid.UUID) error
 }
 
 func NewRepository(client redislib.Cmdable) Repository {
@@ -79,6 +80,23 @@ func (r *repository) Delete(ctx context.Context, accessToken string) error {
 	}
 	if deleted == 0 {
 		return errConstant.ErrNotFound
+	}
+	return nil
+}
+
+func (r *repository) DeleteByUserUUID(ctx context.Context, uuid uuid.UUID) error {
+	indexKey := userSessionKey(uuid)
+
+	sessionKeys, err := r.client.SMembers(ctx, indexKey).Result()
+	if err != nil {
+		return fmt.Errorf("get user sessions: %w", err)
+	}
+
+	keys := make([]string, 0, len(sessionKeys)+1)
+	keys = append(keys, sessionKeys...)
+	keys = append(keys, indexKey)
+	if err := r.client.Del(ctx, keys...).Err(); err != nil {
+		return fmt.Errorf("delete user sessions: %w", err)
 	}
 	return nil
 }

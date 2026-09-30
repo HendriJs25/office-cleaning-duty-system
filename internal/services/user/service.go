@@ -5,6 +5,7 @@ import (
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
 	rolerepository "cleaning/internal/repository/role"
+	sessionrepository "cleaning/internal/repository/session"
 	userrepository "cleaning/internal/repository/user"
 	"context"
 	"fmt"
@@ -14,20 +15,23 @@ import (
 )
 
 type service struct {
-	userRepository userrepository.Repository
-	roleRepository rolerepository.Repository
+	userRepository    userrepository.Repository
+	roleRepository    rolerepository.Repository
+	sessionRepository sessionrepository.Repository
 }
 
 type Service interface {
 	GetAll(context.Context) ([]GetUserResult, error)
 	GetUserDetail(context.Context, uuid.UUID) (*GetUserDetailResult, error)
 	Create(context.Context, CreateUserInput) error
+	DeactivateUser(context.Context, uuid.UUID) error
 }
 
-func NewService(userRepository userrepository.Repository, roleRepository rolerepository.Repository) Service {
+func NewService(userRepository userrepository.Repository, roleRepository rolerepository.Repository, sessionRepository sessionrepository.Repository) Service {
 	return &service{
-		userRepository: userRepository,
-		roleRepository: roleRepository,
+		userRepository:    userRepository,
+		roleRepository:    roleRepository,
+		sessionRepository: sessionRepository,
 	}
 }
 
@@ -123,5 +127,26 @@ func (s *service) Create(ctx context.Context, createInput CreateUserInput) error
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *service) DeactivateUser(ctx context.Context, uuid uuid.UUID) error {
+	user, err := s.userRepository.FindByUUID(ctx, uuid)
+	if err != nil {
+		return err
+	}
+
+	if !user.IsActive {
+		return errConstant.ErrAlreadyDeactivated
+	}
+
+	if err := s.sessionRepository.DeleteByUserUUID(ctx, user.UUID); err != nil {
+		return err
+	}
+
+	if err := s.userRepository.UpdateStatus(ctx, user.UUID, false); err != nil {
+		return err
+	}
+
 	return nil
 }
