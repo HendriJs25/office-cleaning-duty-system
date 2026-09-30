@@ -25,6 +25,7 @@ type Service interface {
 	GetUserDetail(context.Context, uuid.UUID) (*GetUserDetailResult, error)
 	Create(context.Context, CreateUserInput) error
 	DeactivateUser(context.Context, uuid.UUID) error
+	ActivateUser(context.Context, uuid.UUID) error
 }
 
 func NewService(userRepository userrepository.Repository, roleRepository rolerepository.Repository, sessionRepository sessionrepository.Repository) Service {
@@ -148,5 +149,21 @@ func (s *service) DeactivateUser(ctx context.Context, uuid uuid.UUID) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s *service) ActivateUser(ctx context.Context, uuid uuid.UUID) error {
+	user, err := s.userRepository.FindByUUID(ctx, uuid)
+	if err != nil {
+		return err
+	}
+
+	if user.IsActive {
+		return errConstant.ErrAlreadyActivated
+	}
+
+	if err := s.userRepository.UpdateStatus(ctx, user.UUID, true); err != nil {
+		return err
+	}
 	return nil
 }
