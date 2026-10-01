@@ -89,17 +89,18 @@ func (s *service) GetUserDetail(ctx context.Context, uuid uuid.UUID) (*GetUserDe
 }
 
 func (s *service) Create(ctx context.Context, createInput CreateUserInput) error {
-	exist, err := s.roleRepository.ExistByID(ctx, createInput.RoleID)
+	role, err := s.roleRepository.FindByID(ctx, createInput.RoleID)
 	if err != nil {
 		return err
 	}
-	if !exist {
-		return errConstant.ErrNotFound
+
+	if !role.IsActive {
+		return errConstant.ErrInActive
 	}
 
 	normalizedEmail := email.Normalize(createInput.Email)
 
-	exist, err = s.userRepository.ExistByEmail(ctx, normalizedEmail)
+	exist, err := s.userRepository.ExistByEmail(ctx, normalizedEmail)
 	if err != nil {
 		return err
 	}

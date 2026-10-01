@@ -11,6 +11,7 @@ type service struct {
 
 type Service interface {
 	GetAll(context.Context) ([]RoleResult, error)
+	GetAllActiveRoles(context.Context) ([]GetAllActiveRolesResult, error)
 }
 
 func NewService(roleRepository rolerepository.Repository) Service {
@@ -40,4 +41,24 @@ func (s *service) GetAll(ctx context.Context) ([]RoleResult, error) {
 		})
 	}
 	return result, nil
+}
+
+func (s *service) GetAllActiveRoles(ctx context.Context) ([]GetAllActiveRolesResult, error) {
+	result, err := s.roleRepository.FindAllActive(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(result) == 0 {
+		return []GetAllActiveRolesResult{}, nil
+	}
+
+	var roles []GetAllActiveRolesResult
+	for _, role := range result {
+		roles = append(roles, GetAllActiveRolesResult{
+			ID:   role.ID,
+			Name: role.Name,
+		})
+	}
+
+	return roles, nil
 }

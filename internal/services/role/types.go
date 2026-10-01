@@ -6,3 +6,8 @@ type RoleResult struct {
 	Name     string
 	IsActive bool
 }
+
+type GetAllActiveRolesResult struct {
+	ID   int64
+	Name string
+}
