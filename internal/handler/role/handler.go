@@ -58,3 +58,40 @@ func (h *Handler) GetAll(c *gin.Context) {
 		Gin:  c,
 	})
 }
+
+func (h *Handler) GetAllActiveRoles(c *gin.Context) {
+	result, err := h.roleService.GetAllActiveRoles(c.Request.Context())
+	if err != nil {
+		slog.Error("get all active roles failed", "error", err)
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code: http.StatusInternalServerError,
+			Err:  err,
+			Gin:  c,
+		})
+		return
+	}
+
+	if len(result) == 0 {
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code:    http.StatusOK,
+			Message: "ロールがありません",
+			Gin:     c,
+		})
+		return
+	}
+
+	var roles []responsedto.GetActiveRolesResponse
+	for _, role := range result {
+		roles = append(roles, responsedto.GetActiveRolesResponse{
+			ID:   role.ID,
+			Name: role.Name,
+		})
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code: http.StatusOK,
+		Data: roles,
+		Gin:  c,
+	})
+
+}

@@ -8,6 +8,7 @@ import (
 	responsedto "cleaning/internal/domain/dto/response"
 	officeservice "cleaning/internal/services/office"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -62,6 +63,7 @@ func (h *Handler) Create(c *gin.Context) {
 			})
 			return
 		default:
+			slog.Error("create office failed", "error", err)
 			response.HTTPResponse(response.ParamHTTPResponse{
 				Code: http.StatusInternalServerError,
 				Err:  err,
@@ -81,6 +83,7 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 	result, err := h.officeService.GetAllActiveOffices(c.Request.Context())
 	if err != nil {
+		slog.Error("get all office failed", "error", err)
 		response.HTTPResponse(response.ParamHTTPResponse{
 			Code: http.StatusInternalServerError,
 			Err:  err,

@@ -166,6 +166,14 @@ func (h *Handler) Create(c *gin.Context) {
 				Gin:     c,
 			})
 			return
+		case errors.Is(err, errConstant.ErrInActive):
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code:    http.StatusUnprocessableEntity,
+				Message: "ロールが無効化しています。",
+				Err:     err,
+				Gin:     c,
+			})
+			return
 		case errors.Is(err, errConstant.ErrAlreadyExists):
 			response.HTTPResponse(response.ParamHTTPResponse{
 				Code:    http.StatusConflict,
