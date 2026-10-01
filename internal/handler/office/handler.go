@@ -5,6 +5,7 @@ import (
 	"cleaning/internal/common/response"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
+	responsedto "cleaning/internal/domain/dto/response"
 	officeservice "cleaning/internal/services/office"
 	"errors"
 	"net/http"
@@ -75,4 +76,41 @@ func (h *Handler) Create(c *gin.Context) {
 		Message: "オフィスを作成しました。",
 		Gin:     c,
 	})
+}
+
+func (h *Handler) GetAllActiveOffices(c *gin.Context) {
+	result, err := h.officeService.GetAllActiveOffices(c.Request.Context())
+	if err != nil {
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code: http.StatusInternalServerError,
+			Err:  err,
+			Gin:  c,
+		})
+		return
+	}
+
+	if len(result) == 0 {
+		response.HTTPResponse(response.ParamHTTPResponse{
+			Code:    http.StatusOK,
+			Message: "オフィスがありません",
+			Data:    nil,
+			Gin:     c,
+		})
+		return
+	}
+
+	var offices []responsedto.GetActiveOfficesResponse
+	for _, office := range result {
+		offices = append(offices, responsedto.GetActiveOfficesResponse{
+			ID:   office.ID,
+			Name: office.Name,
+		})
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code: http.StatusOK,
+		Data: offices,
+		Gin:  c,
+	})
+
 }
