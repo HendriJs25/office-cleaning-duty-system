@@ -5,3 +5,8 @@ type CreateOfficeInput struct {
 	Name    string
 	Address *string
 }
+
+type GetActiveOfficeResult struct {
+	ID   int64
+	Name string
+}

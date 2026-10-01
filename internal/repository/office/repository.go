@@ -15,6 +15,7 @@ type repository struct {
 type Repository interface {
 	Create(context.Context, *model.Office) error
 	ExistByCode(context.Context, string) (bool, error)
+	GetAllActive(context.Context) ([]model.Office, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -37,4 +38,13 @@ func (r *repository) ExistByCode(ctx context.Context, code string) (bool, error)
 		return false, fmt.Errorf("is office exist: %w", err)
 	}
 	return count > 0, nil
+}
+
+func (r *repository) GetAllActive(ctx context.Context) ([]model.Office, error) {
+	var offices []model.Office
+	err := r.db.WithContext(ctx).Where("is_active = ?", true).Order("id ASC").Find(&offices).Error
+	if err != nil {
+		return nil, fmt.Errorf("get all active offices: %w", err)
+	}
+	return offices, nil
 }
