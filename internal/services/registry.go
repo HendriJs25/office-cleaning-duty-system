@@ -7,6 +7,7 @@ import (
 	sessionrepository "cleaning/internal/repository/session"
 	authservice "cleaning/internal/services/auth"
 	jwtservice "cleaning/internal/services/jwt"
+	officeservice "cleaning/internal/services/office"
 	permissionservice "cleaning/internal/services/permission"
 	roleservice "cleaning/internal/services/role"
 	userservice "cleaning/internal/services/user"
@@ -18,6 +19,7 @@ type Registry struct {
 	RoleService       roleservice.Service
 	PermissionService permissionservice.Service
 	UserService       userservice.Service
+	OfficeService     officeservice.Service
 }
 
 func NewRegistry(repositories *repository.Registry, sessionRepository sessionrepository.Repository, permissionCacheRepository permissioncacherepository.Repository, jwtConfig *config.JWT) *Registry {
@@ -29,5 +31,6 @@ func NewRegistry(repositories *repository.Registry, sessionRepository sessionrep
 		RoleService:       roleservice.NewService(repositories.Role),
 		PermissionService: permissionservice.NewService(repositories.Permission, permissionCacheRepository),
 		UserService:       userservice.NewService(repositories.User, repositories.Role, sessionRepository),
+		OfficeService:     officeservice.NewService(repositories.Office),
 	}
 }

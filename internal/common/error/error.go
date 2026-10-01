@@ -27,6 +27,9 @@ var FieldNameJa = map[string]string{
 	"password":         "パスワード",
 	"user_name":        "ユーザー名",
 	"password_confirm": "パスワード確認",
+	"code":             "コード",
+	"name":             "名前",
+	"address":          "住所",
 }
 
 func ErrValidationResponse(err error) (validationResponse []ValidationResponse) {

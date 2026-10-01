@@ -179,7 +179,6 @@ func (h *Handler) Create(c *gin.Context) {
 			response.HTTPResponse(response.ParamHTTPResponse{
 				Code: http.StatusInternalServerError,
 				Err:  err,
-				Data: nil,
 				Gin:  c,
 			})
 			return
