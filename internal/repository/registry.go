@@ -1,6 +1,7 @@
 package repository
 
 import (
+	employeerepository "cleaning/internal/repository/employee"
 	officerepository "cleaning/internal/repository/office"
 	permissionrepository "cleaning/internal/repository/permission"
 	rolerepository "cleaning/internal/repository/role"
@@ -14,6 +15,7 @@ type Registry struct {
 	Role       rolerepository.Repository
 	Permission permissionrepository.Repository
 	Office     officerepository.Repository
+	Employee   employeerepository.Repository
 }
 
 func NewRegistry(db *gorm.DB) *Registry {
@@ -22,5 +24,6 @@ func NewRegistry(db *gorm.DB) *Registry {
 		Role:       rolerepository.NewRepository(db),
 		Permission: permissionrepository.NewRepository(db),
 		Office:     officerepository.NewRepository(db),
+		Employee:   employeerepository.NewRepository(db),
 	}
 }
