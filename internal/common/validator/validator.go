@@ -64,5 +64,5 @@ func notBlank(f1 validator.FieldLevel) bool {
 }
 
 func lowercaseHyphen(f1 validator.FieldLevel) bool {
-	return lowerRegex.MatchString(f1.Field().String())
+	return lowercaseHyphenRegex.MatchString(f1.Field().String())
 }

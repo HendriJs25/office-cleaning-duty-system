@@ -3,6 +3,7 @@ package handler
 import (
 	authhandler "cleaning/internal/handler/auth"
 	healthhandler "cleaning/internal/handler/health"
+	officehandler "cleaning/internal/handler/office"
 	rolehandler "cleaning/internal/handler/role"
 	userhandler "cleaning/internal/handler/user"
 	"cleaning/internal/services"
@@ -15,6 +16,7 @@ type Register struct {
 	Auth   *authhandler.Handler
 	Role   *rolehandler.Handler
 	User   *userhandler.Handler
+	Office *officehandler.Handler
 }
 
 func NewRegistry(services *services.Registry, validate *customValidator.Validate) *Register {
@@ -23,5 +25,6 @@ func NewRegistry(services *services.Registry, validate *customValidator.Validate
 		Auth:   authhandler.NewHandler(services.AuthService, validate),
 		Role:   rolehandler.NewHandler(services.RoleService),
 		User:   userhandler.NewHandler(services.UserService, validate),
+		Office: officehandler.NewHandler(services.OfficeService, validate),
 	}
 }
