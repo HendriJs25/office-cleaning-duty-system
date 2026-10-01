@@ -1,8 +1,10 @@
 package office
 
 import (
+	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
 	"context"
+	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -16,6 +18,7 @@ type Repository interface {
 	Create(context.Context, *model.Office) error
 	ExistByCode(context.Context, string) (bool, error)
 	GetAllActive(context.Context) ([]model.Office, error)
+	GetByID(context.Context, int64) (*model.Office, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -47,4 +50,16 @@ func (r *repository) GetAllActive(ctx context.Context) ([]model.Office, error) {
 		return nil, fmt.Errorf("get all active offices: %w", err)
 	}
 	return offices, nil
+}
+
+func (r *repository) GetByID(ctx context.Context, id int64) (*model.Office, error) {
+	var office model.Office
+	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&office).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("get office by id: %w", err)
+	}
+	return &office, nil
 }

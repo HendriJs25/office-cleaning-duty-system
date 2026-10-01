@@ -22,16 +22,25 @@ var ErrValidator = map[string]string{
 	"eqfield":          "%sがパスワードと一致していません",
 	"notblank":         "%sは空白のみでは登録できません",
 	"lowercase_hyphen": "%sは半角小文字とハイフン（-）のみ使用できます",
+	"required_with":    "%sは%sが入力されている場合、必須です",
+	"gtfield":          "%sは%sより後の日時を指定してください",
 }
 
 var FieldNameJa = map[string]string{
-	"email":            "メールアドレス",
-	"password":         "パスワード",
-	"user_name":        "ユーザー名",
-	"password_confirm": "パスワード確認",
-	"code":             "コード",
-	"name":             "名前",
-	"address":          "住所",
+	"email":                 "メールアドレス",
+	"password":              "パスワード",
+	"user_name":             "ユーザー名",
+	"password_confirm":      "パスワード確認",
+	"code":                  "コード",
+	"name":                  "名前",
+	"address":               "住所",
+	"office_id":             "オフィス",
+	"family_name":           "姓",
+	"given_name":            "名",
+	"family_name_kana":      "姓（カナ）",
+	"given_name_kana":       "名（カナ）",
+	"employment_start_date": "勤務開始日",
+	"employment_end_date":   "勤務終了日",
 }
 
 func ErrValidationResponse(err error) (validationResponse []ValidationResponse) {
