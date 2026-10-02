@@ -7,6 +7,7 @@ import (
 	"cleaning/internal/domain/dto/request"
 	employeeservice "cleaning/internal/services/employee"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -53,12 +54,42 @@ func (h *Handler) Create(c *gin.Context) {
 		GivenName:           req.GivenName,
 		FamilyNameKana:      req.FamilyNameKana,
 		GivenNameKana:       req.GivenNameKana,
-		EmploymentStartDate: req.EmploymentStartDate,
-		EmploymentEndDate:   req.EmploymentEndDate,
+		EmploymentStartDate: req.EmploymentStartDate.TimePtr(),
+		EmploymentEndDate:   req.EmploymentEndDate.TimePtr(),
 	})
 
 	if err != nil {
-
+		switch {
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code:    http.StatusUnprocessableEntity,
+				Message: "指定されたオフィスが見つかりません",
+				Err:     err,
+				Gin:     c,
+			})
+			return
+		case errors.Is(err, errConstant.ErrInActive):
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code:    http.StatusUnprocessableEntity,
+				Message: "オフィスが無効化しています",
+				Err:     err,
+				Gin:     c,
+			})
+			return
+		default:
+			slog.Error("create employee failed", "error", err)
+			response.HTTPResponse(response.ParamHTTPResponse{
+				Code: http.StatusInternalServerError,
+				Err:  err,
+				Gin:  c,
+			})
+			return
 		}
 	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "従業員を登録しました。",
+		Gin:     c,
+	})
 }
