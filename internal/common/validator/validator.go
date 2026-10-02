@@ -15,6 +15,7 @@ var (
 	upperRegex           = regexp.MustCompile(`[A-Z]`)
 	numberRegex          = regexp.MustCompile(`[0-9]`)
 	lowercaseHyphenRegex = regexp.MustCompile(`^[a-z-]+$`)
+	katakanaRegex        = regexp.MustCompile(`^[ァ-ヶー]+$`)
 )
 
 func New() *validator.Validate {
@@ -38,6 +39,7 @@ func registerCustomValidators(v *validator.Validate) {
 		"validpassword":    validPassword,
 		"notblank":         notBlank,
 		"lowercase_hyphen": lowercaseHyphen,
+		"katakana":         validateKatakana,
 	}
 
 	for tag, fn := range validations {
@@ -65,4 +67,8 @@ func notBlank(f1 validator.FieldLevel) bool {
 
 func lowercaseHyphen(f1 validator.FieldLevel) bool {
 	return lowercaseHyphenRegex.MatchString(f1.Field().String())
+}
+
+func validateKatakana(f1 validator.FieldLevel) bool {
+	return katakanaRegex.MatchString(f1.Field().String())
 }

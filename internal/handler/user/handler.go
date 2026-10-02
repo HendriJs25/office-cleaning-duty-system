@@ -161,7 +161,7 @@ func (h *Handler) Create(c *gin.Context) {
 		case errors.Is(err, errConstant.ErrNotFound):
 			response.HTTPResponse(response.ParamHTTPResponse{
 				Code:    http.StatusUnprocessableEntity,
-				Message: "ロールがありません。",
+				Message: "指定されたロールが見つかりません",
 				Err:     err,
 				Gin:     c,
 			})
@@ -169,7 +169,7 @@ func (h *Handler) Create(c *gin.Context) {
 		case errors.Is(err, errConstant.ErrInActive):
 			response.HTTPResponse(response.ParamHTTPResponse{
 				Code:    http.StatusUnprocessableEntity,
-				Message: "ロールが無効化しています。",
+				Message: "ロールが無効化しています",
 				Err:     err,
 				Gin:     c,
 			})

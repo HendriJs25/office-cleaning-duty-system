@@ -33,6 +33,7 @@ func (r *Register) Register() {
 		r.handlers.Role,
 		r.handlers.User,
 		r.handlers.Office,
+		r.handlers.Employee,
 		r.authentication,
 		r.authorization)
 }

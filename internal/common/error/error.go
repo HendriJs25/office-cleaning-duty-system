@@ -19,28 +19,29 @@ var ErrValidator = map[string]string{
 	"max":              "%sは%s文字以内で入力してください",
 	"min":              "%sは%s文字以上で入力してください",
 	"validpassword":    "%sは8文字以上で、大文字・小文字・数字をそれぞれ1文字以上含めてください",
-	"eqfield":          "%sがパスワードと一致していません",
+	"eqfield":          "%sが%sと一致していません",
 	"notblank":         "%sは空白のみでは登録できません",
 	"lowercase_hyphen": "%sは半角小文字とハイフン（-）のみ使用できます",
 	"required_with":    "%sは%sが入力されている場合、必須です",
-	"gtfield":          "%sは%sより後の日時を指定してください",
+	"gtfield":          "%sは%sより後の日付を指定してください",
+	"katakana":         "%sはカタカナのみで入力してください",
 }
 
 var FieldNameJa = map[string]string{
-	"email":                 "メールアドレス",
-	"password":              "パスワード",
-	"user_name":             "ユーザー名",
-	"password_confirm":      "パスワード確認",
-	"code":                  "コード",
-	"name":                  "名前",
-	"address":               "住所",
-	"office_id":             "オフィス",
-	"family_name":           "姓",
-	"given_name":            "名",
-	"family_name_kana":      "姓（カナ）",
-	"given_name_kana":       "名（カナ）",
-	"employment_start_date": "勤務開始日",
-	"employment_end_date":   "勤務終了日",
+	"Email":               "メールアドレス",
+	"Password":            "パスワード",
+	"UserName":            "ユーザー名",
+	"PasswordConfirm":     "パスワード確認",
+	"Code":                "コード",
+	"Name":                "名前",
+	"Address":             "住所",
+	"OfficeID":            "オフィス",
+	"FamilyName":          "姓",
+	"GivenName":           "名",
+	"FamilyNameKana":      "姓（カナ）",
+	"GivenNameKana":       "名（カナ）",
+	"EmploymentStartDate": "勤務開始日",
+	"EmploymentEndDate":   "勤務終了日",
 }
 
 func ErrValidationResponse(err error) (validationResponse []ValidationResponse) {
@@ -48,7 +49,8 @@ func ErrValidationResponse(err error) (validationResponse []ValidationResponse) 
 
 	if errors.As(err, &fieldErrors) {
 		for _, err := range fieldErrors {
-			fieldJa := getFieldNameJa(err.Field())
+			fieldJa := getFieldNameJa(err.StructField())
+			paramJa := getFieldNameJa(err.Param())
 			errValidator, ok := ErrValidator[err.Tag()]
 			if ok {
 				count := strings.Count(errValidator, "%s")
@@ -60,7 +62,7 @@ func ErrValidationResponse(err error) (validationResponse []ValidationResponse) 
 				} else {
 					validationResponse = append(validationResponse, ValidationResponse{
 						Field:   err.Field(),
-						Message: fmt.Sprintf(errValidator, fieldJa, err.Param()),
+						Message: fmt.Sprintf(errValidator, fieldJa, paramJa),
 					})
 				}
 			} else {
