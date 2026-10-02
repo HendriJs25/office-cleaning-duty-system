@@ -1,7 +1,6 @@
 package office
 
 import (
-	errWrap "cleaning/internal/common/error"
 	"cleaning/internal/common/response"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
@@ -28,21 +27,12 @@ func (h *Handler) Create(c *gin.Context) {
 	var req request.CreateOfficeRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusBadRequest,
-			Err:  errConstant.ErrBadRequest,
-			Gin:  c,
-		})
+		response.BadRequest(c)
 		return
 	}
 
 	if err := h.validate.Struct(req); err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code:    http.StatusUnprocessableEntity,
-			Message: errWrap.ErrValidationResponse(err),
-			Err:     err,
-			Gin:     c,
-		})
+		response.ValidationError(c, err)
 		return
 	}
 
@@ -55,27 +45,18 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrAlreadyExists):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code:    http.StatusConflict,
-				Message: "このコードが既に登録されています",
-				Err:     err,
-				Gin:     c,
-			})
+			response.Conflict(c, err, "コード")
 			return
 		default:
 			slog.Error("create office failed", "error", err)
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-				Gin:  c,
-			})
+			response.InternalServerError(c, err)
 			return
 		}
 	}
 
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code:    http.StatusOK,
-		Message: "オフィスを作成しました。",
+		Message: "オフィスを登録しました",
 		Gin:     c,
 	})
 }
@@ -84,21 +65,12 @@ func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 	result, err := h.officeService.GetAllActiveOffices(c.Request.Context())
 	if err != nil {
 		slog.Error("get all office failed", "error", err)
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusInternalServerError,
-			Err:  err,
-			Gin:  c,
-		})
+		response.InternalServerError(c, err)
 		return
 	}
 
 	if len(result) == 0 {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code:    http.StatusOK,
-			Message: "オフィスがありません",
-			Data:    nil,
-			Gin:     c,
-		})
+		response.Empty(c, "オフィス")
 		return
 	}
 
@@ -115,5 +87,4 @@ func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 		Data: offices,
 		Gin:  c,
 	})
-
 }

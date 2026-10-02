@@ -2,7 +2,6 @@ package auth
 
 import (
 	"cleaning/internal/common/cookie"
-	errWrap "cleaning/internal/common/error"
 	"cleaning/internal/common/response"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
@@ -34,21 +33,12 @@ func (h *Handler) Login(c *gin.Context) {
 	var req request.LoginRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusBadRequest,
-			Err:  errConstant.ErrBadRequest,
-			Gin:  c,
-		})
+		response.BadRequest(c)
 		return
 	}
 
 	if err := h.validate.Struct(req); err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code:    http.StatusUnprocessableEntity,
-			Message: errWrap.ErrValidationResponse(err),
-			Err:     err,
-			Gin:     c,
-		})
+		response.ValidationError(c, err)
 		return
 	}
 
@@ -60,26 +50,14 @@ func (h *Handler) Login(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound) || errors.Is(err, errConstant.ErrPasswordIncorrect):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusUnauthorized,
-				Err:  errConstant.ErrInvalidEmailOrPassword,
-				Gin:  c,
-			})
+			response.Unauthorized(c)
 			return
 		case errors.Is(err, errConstant.ErrAccountIsDeactivated):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusForbidden,
-				Err:  err,
-				Gin:  c,
-			})
+			response.Forbidden(c, err)
 			return
 		default:
 			slog.Error("login failed", "email", req.Email, "error", err)
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-				Gin:  c,
-			})
+			response.InternalServerError(c, err)
 			return
 		}
 	}
@@ -112,18 +90,14 @@ func (h *Handler) Logout(c *gin.Context) {
 	err := h.authService.Logout(c.Request.Context(), identity.Token)
 	if err != nil {
 		slog.Error("logout failed", "error", err)
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusInternalServerError,
-			Err:  errConstant.ErrInternalServerError,
-			Gin:  c,
-		})
+		response.InternalServerError(c, errConstant.ErrInternalServerError)
 	}
 
 	cookie.ClearAccessToken(c)
 
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code:    http.StatusOK,
-		Message: "ログアウトしました。",
+		Message: "ログアウトしました",
 		Gin:     c,
 	})
 }
