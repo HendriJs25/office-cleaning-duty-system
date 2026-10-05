@@ -1,7 +1,6 @@
 package employee
 
 import (
-	errWrap "cleaning/internal/common/error"
 	"cleaning/internal/common/response"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
@@ -30,21 +29,12 @@ func (h *Handler) Create(c *gin.Context) {
 	var req request.CreateEmployeeRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusBadRequest,
-			Err:  errConstant.ErrBadRequest,
-			Gin:  c,
-		})
+		response.BadRequest(c)
 		return
 	}
 
 	if err := h.validate.Struct(req); err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code:    http.StatusUnprocessableEntity,
-			Message: errWrap.ErrValidationResponse(err),
-			Err:     err,
-			Gin:     c,
-		})
+		response.ValidationError(c, err)
 		return
 	}
 
@@ -61,28 +51,14 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code:    http.StatusUnprocessableEntity,
-				Message: "指定されたオフィスが見つかりません",
-				Err:     err,
-				Gin:     c,
-			})
+			response.InvalidOption(c, err, "オフィス")
 			return
 		case errors.Is(err, errConstant.ErrInActive):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code:    http.StatusUnprocessableEntity,
-				Message: "オフィスが無効化しています",
-				Err:     err,
-				Gin:     c,
-			})
+			response.InactiveOption(c, err, "オフィス")
 			return
 		default:
 			slog.Error("create employee failed", "error", err)
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-				Gin:  c,
-			})
+			response.InternalServerError(c, err)
 			return
 		}
 	}

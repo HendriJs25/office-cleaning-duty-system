@@ -67,3 +67,30 @@ func Empty(c *gin.Context, resource string) {
 		Gin:     c,
 	})
 }
+
+func NotFound(c *gin.Context, err error) {
+	HTTPResponse(ParamHTTPResponse{
+		Code:    http.StatusNotFound,
+		Message: "該当するデータがありません",
+		Err:     err,
+		Gin:     c,
+	})
+}
+
+func InvalidOption(c *gin.Context, err error, resource string) {
+	HTTPResponse(ParamHTTPResponse{
+		Code:    http.StatusUnprocessableEntity,
+		Message: fmt.Sprintf("指定された%sが見つかりません", resource),
+		Err:     err,
+		Gin:     c,
+	})
+}
+
+func InactiveOption(c *gin.Context, err error, resource string) {
+	HTTPResponse(ParamHTTPResponse{
+		Code:    http.StatusUnprocessableEntity,
+		Message: fmt.Sprintf("指定された%sは無効化されています", resource),
+		Err:     err,
+		Gin:     c,
+	})
+}
