@@ -31,7 +31,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 	result, err := h.UserService.GetAll(c.Request.Context())
 	if err != nil {
 		slog.Error("get all users failed", "error", err)
-		response.InternalServerError(c, err)
+		response.InternalServerError(c)
 		return
 	}
 
@@ -68,11 +68,11 @@ func (h *Handler) GetUserDetail(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
-			response.NotFound(c, err)
+			response.NotFound(c)
 			return
 		default:
 			slog.Error("get user detail failed", "uuid", parsedUUID, "error", err)
-			response.InternalServerError(c, err)
+			response.InternalServerError(c)
 			return
 		}
 	}
@@ -138,11 +138,11 @@ func (h *Handler) Create(c *gin.Context) {
 			response.InactiveOption(c, err, "ロール")
 			return
 		case errors.Is(err, errConstant.ErrAlreadyExists):
-			response.Conflict(c, err, "メールアドレス")
+			response.ConflictDuplicate(c, err, "メールアドレス")
 			return
 		default:
 			slog.Error("create user failed", "error", err)
-			response.InternalServerError(c, err)
+			response.InternalServerError(c)
 			return
 		}
 	}
@@ -166,18 +166,14 @@ func (h *Handler) DeactivateUser(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
-			response.NotFound(c, err)
+			response.NotFound(c)
 			return
 		case errors.Is(err, errConstant.ErrAlreadyDeactivated):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusConflict,
-				Err:  errConstant.ErrAlreadyDeactivated,
-				Gin:  c,
-			})
+			response.Conflict(c, err)
 			return
 		default:
 			slog.Error("deactivate user failed", "uuid", parsedUUID, "error", err)
-			response.InternalServerError(c, err)
+			response.InternalServerError(c)
 			return
 		}
 	}
@@ -201,25 +197,21 @@ func (h *Handler) ActivateUser(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
-			response.NotFound(c, err)
+			response.NotFound(c)
 			return
 		case errors.Is(err, errConstant.ErrAlreadyActivated):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusConflict,
-				Err:  errConstant.ErrAlreadyActivated,
-				Gin:  c,
-			})
+			response.Conflict(c, err)
 			return
 		default:
 			slog.Error("activate user failed", "uuid", parsedUUID, "error", err)
-			response.InternalServerError(c, err)
+			response.InternalServerError(c)
 			return
 		}
 	}
 
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code:    http.StatusOK,
-		Message: "ユーザーを効化しました",
+		Message: "ユーザーを有効化しました",
 		Gin:     c,
 	})
 }

@@ -58,7 +58,7 @@ func (h *Handler) Create(c *gin.Context) {
 			return
 		default:
 			slog.Error("create employee failed", "error", err)
-			response.InternalServerError(c, err)
+			response.InternalServerError(c)
 			return
 		}
 	}

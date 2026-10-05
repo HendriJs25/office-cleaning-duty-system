@@ -9,10 +9,34 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func InternalServerError(c *gin.Context) {
+	HTTPResponse(ParamHTTPResponse{
+		Code: http.StatusInternalServerError,
+		Err:  errConstant.ErrInternalServerError,
+		Gin:  c,
+	})
+}
+
 func BadRequest(c *gin.Context) {
 	HTTPResponse(ParamHTTPResponse{
 		Code: http.StatusBadRequest,
 		Err:  errConstant.ErrBadRequest,
+		Gin:  c,
+	})
+}
+
+func Unauthorized(c *gin.Context) {
+	HTTPResponse(ParamHTTPResponse{
+		Code: http.StatusUnauthorized,
+		Err:  errConstant.ErrInvalidEmailOrPassword,
+		Gin:  c,
+	})
+}
+
+func NotFound(c *gin.Context) {
+	HTTPResponse(ParamHTTPResponse{
+		Code: http.StatusNotFound,
+		Err:  errConstant.ErrNotFound,
 		Gin:  c,
 	})
 }
@@ -26,14 +50,6 @@ func ValidationError(c *gin.Context, err error) {
 	})
 }
 
-func Unauthorized(c *gin.Context) {
-	HTTPResponse(ParamHTTPResponse{
-		Code: http.StatusUnauthorized,
-		Err:  errConstant.ErrInvalidEmailOrPassword,
-		Gin:  c,
-	})
-}
-
 func Forbidden(c *gin.Context, err error) {
 	HTTPResponse(ParamHTTPResponse{
 		Code: http.StatusForbidden,
@@ -42,20 +58,11 @@ func Forbidden(c *gin.Context, err error) {
 	})
 }
 
-func InternalServerError(c *gin.Context, err error) {
+func Conflict(c *gin.Context, err error) {
 	HTTPResponse(ParamHTTPResponse{
-		Code: http.StatusInternalServerError,
+		Code: http.StatusConflict,
 		Err:  err,
 		Gin:  c,
-	})
-}
-
-func Conflict(c *gin.Context, err error, field string) {
-	HTTPResponse(ParamHTTPResponse{
-		Code:    http.StatusConflict,
-		Message: fmt.Sprintf("%sが既に登録されています", field),
-		Err:     err,
-		Gin:     c,
 	})
 }
 
@@ -68,10 +75,10 @@ func Empty(c *gin.Context, resource string) {
 	})
 }
 
-func NotFound(c *gin.Context, err error) {
+func ConflictDuplicate(c *gin.Context, err error, field string) {
 	HTTPResponse(ParamHTTPResponse{
-		Code:    http.StatusNotFound,
-		Message: "該当するデータがありません",
+		Code:    http.StatusConflict,
+		Message: fmt.Sprintf("%sが既に登録されています", field),
 		Err:     err,
 		Gin:     c,
 	})

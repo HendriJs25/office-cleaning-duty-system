@@ -24,7 +24,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 	result, err := h.roleService.GetAll(c.Request.Context())
 	if err != nil {
 		slog.Error("get all roles failed", "error", err)
-		response.InternalServerError(c, err)
+		response.InternalServerError(c)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (h *Handler) GetAllActiveRoles(c *gin.Context) {
 	result, err := h.roleService.GetAllActiveRoles(c.Request.Context())
 	if err != nil {
 		slog.Error("get all active roles failed", "error", err)
-		response.InternalServerError(c, err)
+		response.InternalServerError(c)
 		return
 	}
 

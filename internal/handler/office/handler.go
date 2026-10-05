@@ -45,11 +45,11 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrAlreadyExists):
-			response.Conflict(c, err, "コード")
+			response.ConflictDuplicate(c, err, "コード")
 			return
 		default:
 			slog.Error("create office failed", "error", err)
-			response.InternalServerError(c, err)
+			response.InternalServerError(c)
 			return
 		}
 	}
@@ -65,7 +65,7 @@ func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 	result, err := h.officeService.GetAllActiveOffices(c.Request.Context())
 	if err != nil {
 		slog.Error("get all office failed", "error", err)
-		response.InternalServerError(c, err)
+		response.InternalServerError(c)
 		return
 	}
 

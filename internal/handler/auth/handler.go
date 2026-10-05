@@ -57,7 +57,7 @@ func (h *Handler) Login(c *gin.Context) {
 			return
 		default:
 			slog.Error("login failed", "email", req.Email, "error", err)
-			response.InternalServerError(c, err)
+			response.InternalServerError(c)
 			return
 		}
 	}
@@ -90,7 +90,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	err := h.authService.Logout(c.Request.Context(), identity.Token)
 	if err != nil {
 		slog.Error("logout failed", "error", err)
-		response.InternalServerError(c, errConstant.ErrInternalServerError)
+		response.InternalServerError(c)
 	}
 
 	cookie.ClearAccessToken(c)
