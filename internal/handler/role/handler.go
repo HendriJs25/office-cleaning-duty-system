@@ -24,21 +24,12 @@ func (h *Handler) GetAll(c *gin.Context) {
 	result, err := h.roleService.GetAll(c.Request.Context())
 	if err != nil {
 		slog.Error("get all roles failed", "error", err)
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusInternalServerError,
-			Err:  err,
-			Gin:  c,
-		})
+		response.InternalServerError(c, err)
 		return
 	}
 
 	if len(result) == 0 {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code:    http.StatusOK,
-			Message: "データがありません。",
-			Data:    nil,
-			Gin:     c,
-		})
+		response.Empty(c, "ロール")
 		return
 	}
 
@@ -63,20 +54,12 @@ func (h *Handler) GetAllActiveRoles(c *gin.Context) {
 	result, err := h.roleService.GetAllActiveRoles(c.Request.Context())
 	if err != nil {
 		slog.Error("get all active roles failed", "error", err)
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusInternalServerError,
-			Err:  err,
-			Gin:  c,
-		})
+		response.InternalServerError(c, err)
 		return
 	}
 
 	if len(result) == 0 {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code:    http.StatusOK,
-			Message: "ロールがありません",
-			Gin:     c,
-		})
+		response.Empty(c, "ロール")
 		return
 	}
 

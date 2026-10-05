@@ -1,7 +1,6 @@
 package user
 
 import (
-	errWrap "cleaning/internal/common/error"
 	"cleaning/internal/common/response"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
@@ -32,12 +31,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 	result, err := h.UserService.GetAll(c.Request.Context())
 	if err != nil {
 		slog.Error("get all users failed", "error", err)
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusInternalServerError,
-			Err:  err,
-			Data: nil,
-			Gin:  c,
-		})
+		response.InternalServerError(c, err)
 		return
 	}
 
@@ -66,11 +60,7 @@ func (h *Handler) GetUserDetail(c *gin.Context) {
 
 	parsedUUID, err := uuid.Parse(uuidStr)
 	if err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusBadRequest,
-			Err:  errConstant.ErrBadRequest,
-			Gin:  c,
-		})
+		response.BadRequest(c)
 		return
 	}
 
@@ -78,19 +68,11 @@ func (h *Handler) GetUserDetail(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusNotFound,
-				Err:  errConstant.ErrNotFound,
-				Gin:  c,
-			})
+			response.NotFound(c, err)
 			return
 		default:
 			slog.Error("get user detail failed", "uuid", parsedUUID, "error", err)
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-				Gin:  c,
-			})
+			response.InternalServerError(c, err)
 			return
 		}
 	}
@@ -130,21 +112,12 @@ func (h *Handler) Create(c *gin.Context) {
 	var req request.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusBadRequest,
-			Err:  errConstant.ErrBadRequest,
-			Gin:  c,
-		})
+		response.BadRequest(c)
 		return
 	}
 
 	if err := h.validate.Struct(req); err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code:    http.StatusUnprocessableEntity,
-			Message: errWrap.ErrValidationResponse(err),
-			Err:     err,
-			Gin:     c,
-		})
+		response.ValidationError(c, err)
 		return
 	}
 
@@ -159,36 +132,17 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code:    http.StatusUnprocessableEntity,
-				Message: "指定されたロールが見つかりません",
-				Err:     err,
-				Gin:     c,
-			})
+			response.InvalidOption(c, err, "ロール")
 			return
 		case errors.Is(err, errConstant.ErrInActive):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code:    http.StatusUnprocessableEntity,
-				Message: "ロールが無効化しています",
-				Err:     err,
-				Gin:     c,
-			})
+			response.InactiveOption(c, err, "ロール")
 			return
 		case errors.Is(err, errConstant.ErrAlreadyExists):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code:    http.StatusConflict,
-				Message: "このメールアドレスは既に登録されています。",
-				Err:     err,
-				Gin:     c,
-			})
+			response.Conflict(c, err, "メールアドレス")
 			return
 		default:
 			slog.Error("create user failed", "error", err)
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-				Gin:  c,
-			})
+			response.InternalServerError(c, err)
 			return
 		}
 	}
@@ -204,11 +158,7 @@ func (h *Handler) DeactivateUser(c *gin.Context) {
 	uuidStr := c.Param("uuid")
 	parsedUUID, err := uuid.Parse(uuidStr)
 	if err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusBadRequest,
-			Err:  errConstant.ErrBadRequest,
-			Gin:  c,
-		})
+		response.BadRequest(c)
 		return
 	}
 
@@ -216,11 +166,7 @@ func (h *Handler) DeactivateUser(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusNotFound,
-				Err:  errConstant.ErrNotFound,
-				Gin:  c,
-			})
+			response.NotFound(c, err)
 			return
 		case errors.Is(err, errConstant.ErrAlreadyDeactivated):
 			response.HTTPResponse(response.ParamHTTPResponse{
@@ -231,11 +177,7 @@ func (h *Handler) DeactivateUser(c *gin.Context) {
 			return
 		default:
 			slog.Error("deactivate user failed", "uuid", parsedUUID, "error", err)
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-				Gin:  c,
-			})
+			response.InternalServerError(c, err)
 			return
 		}
 	}
@@ -251,11 +193,7 @@ func (h *Handler) ActivateUser(c *gin.Context) {
 	uuidStr := c.Param("uuid")
 	parsedUUID, err := uuid.Parse(uuidStr)
 	if err != nil {
-		response.HTTPResponse(response.ParamHTTPResponse{
-			Code: http.StatusBadRequest,
-			Err:  errConstant.ErrBadRequest,
-			Gin:  c,
-		})
+		response.BadRequest(c)
 		return
 	}
 
@@ -263,11 +201,7 @@ func (h *Handler) ActivateUser(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusNotFound,
-				Err:  errConstant.ErrNotFound,
-				Gin:  c,
-			})
+			response.NotFound(c, err)
 			return
 		case errors.Is(err, errConstant.ErrAlreadyActivated):
 			response.HTTPResponse(response.ParamHTTPResponse{
@@ -278,11 +212,7 @@ func (h *Handler) ActivateUser(c *gin.Context) {
 			return
 		default:
 			slog.Error("activate user failed", "uuid", parsedUUID, "error", err)
-			response.HTTPResponse(response.ParamHTTPResponse{
-				Code: http.StatusInternalServerError,
-				Err:  err,
-				Gin:  c,
-			})
+			response.InternalServerError(c, err)
 			return
 		}
 	}
