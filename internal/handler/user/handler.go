@@ -131,11 +131,17 @@ func (h *Handler) Create(c *gin.Context) {
 
 	if err != nil {
 		switch {
-		case errors.Is(err, errConstant.ErrNotFound):
+		case errors.Is(err, errConstant.ErrRoleNotFound):
 			response.InvalidOption(c, err, "ロール")
 			return
-		case errors.Is(err, errConstant.ErrInActive):
+		case errors.Is(err, errConstant.ErrEmployeeNotFound):
+			response.InvalidOption(c, err, "従業員")
+			return
+		case errors.Is(err, errConstant.ErrRoleInActive):
 			response.InactiveOption(c, err, "ロール")
+			return
+		case errors.Is(err, errConstant.ErrEmployeeInActive):
+			response.InactiveOption(c, err, "従業員")
 			return
 		case errors.Is(err, errConstant.ErrAlreadyExists):
 			response.ConflictDuplicate(c, err, "メールアドレス")

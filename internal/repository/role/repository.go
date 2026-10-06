@@ -41,7 +41,7 @@ func (r *repository) FindByID(ctx context.Context, id int64) (*model.Role, error
 	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&role).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errConstant.ErrNotFound
+			return nil, errConstant.ErrRoleNotFound
 		}
 		return nil, fmt.Errorf("find role by id: %w", err)
 	}

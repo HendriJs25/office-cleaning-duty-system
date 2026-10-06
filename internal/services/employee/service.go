@@ -58,7 +58,7 @@ func (s *service) Create(ctx context.Context, input CreateEmployeeInput) error {
 }
 
 func (s *service) GetAllActiveEmployees(ctx context.Context) ([]GetActiveEmployeesResult, error) {
-	employees, err := s.employeeRepository.GetAllActive(ctx)
+	employees, err := s.employeeRepository.FindAllActive(ctx)
 	if err != nil {
 		return nil, err
 	}
