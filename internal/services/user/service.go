@@ -4,6 +4,7 @@ import (
 	"cleaning/internal/common/email"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
+	employeerepository "cleaning/internal/repository/employee"
 	rolerepository "cleaning/internal/repository/role"
 	sessionrepository "cleaning/internal/repository/session"
 	userrepository "cleaning/internal/repository/user"
@@ -15,9 +16,10 @@ import (
 )
 
 type service struct {
-	userRepository    userrepository.Repository
-	roleRepository    rolerepository.Repository
-	sessionRepository sessionrepository.Repository
+	userRepository     userrepository.Repository
+	roleRepository     rolerepository.Repository
+	employeeRepository employeerepository.Repository
+	sessionRepository  sessionrepository.Repository
 }
 
 type Service interface {
@@ -28,11 +30,12 @@ type Service interface {
 	ActivateUser(context.Context, uuid.UUID) error
 }
 
-func NewService(userRepository userrepository.Repository, roleRepository rolerepository.Repository, sessionRepository sessionrepository.Repository) Service {
+func NewService(userRepository userrepository.Repository, roleRepository rolerepository.Repository, employeeRepository employeerepository.Repository, sessionRepository sessionrepository.Repository) Service {
 	return &service{
-		userRepository:    userRepository,
-		roleRepository:    roleRepository,
-		sessionRepository: sessionRepository,
+		userRepository:     userRepository,
+		roleRepository:     roleRepository,
+		employeeRepository: employeeRepository,
+		sessionRepository:  sessionRepository,
 	}
 }
 
@@ -95,7 +98,16 @@ func (s *service) Create(ctx context.Context, createInput CreateUserInput) error
 	}
 
 	if !role.IsActive {
-		return errConstant.ErrInActive
+		return errConstant.ErrRoleInActive
+	}
+
+	employee, err := s.employeeRepository.FindByID(ctx, createInput.EmployeeID)
+	if err != nil {
+		return err
+	}
+
+	if !employee.IsActive {
+		return errConstant.ErrEmployeeInActive
 	}
 
 	normalizedEmail := email.Normalize(createInput.Email)
@@ -107,8 +119,6 @@ func (s *service) Create(ctx context.Context, createInput CreateUserInput) error
 	if exist {
 		return errConstant.ErrAlreadyExists
 	}
-
-	// todo: employee is exist function
 
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(createInput.Password), bcrypt.DefaultCost)
 	if err != nil {
