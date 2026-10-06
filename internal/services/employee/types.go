@@ -11,3 +11,8 @@ type CreateEmployeeInput struct {
 	EmploymentStartDate *time.Time
 	EmploymentEndDate   *time.Time
 }
+
+type GetActiveEmployeesResult struct {
+	ID       int64
+	FullName string
+}

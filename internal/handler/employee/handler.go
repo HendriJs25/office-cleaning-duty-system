@@ -4,6 +4,7 @@ import (
 	"cleaning/internal/common/response"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
+	responsedto "cleaning/internal/domain/dto/response"
 	employeeservice "cleaning/internal/services/employee"
 	"errors"
 	"log/slog"
@@ -67,5 +68,33 @@ func (h *Handler) Create(c *gin.Context) {
 		Code:    http.StatusOK,
 		Message: "従業員を登録しました。",
 		Gin:     c,
+	})
+}
+
+func (h *Handler) GetAllActiveEmployees(c *gin.Context) {
+	employees, err := h.employeeService.GetAllActiveEmployees(c.Request.Context())
+	if err != nil {
+		slog.Error("get all active employee failed", "error", err)
+		response.InternalServerError(c)
+		return
+	}
+
+	if len(employees) == 0 {
+		response.Empty(c, "従業員")
+		return
+	}
+
+	var result []responsedto.GetActiveEmployeesResponse
+	for _, employee := range employees {
+		result = append(result, responsedto.GetActiveEmployeesResponse{
+			ID:       employee.ID,
+			FullName: employee.FullName,
+		})
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code: http.StatusOK,
+		Data: result,
+		Gin:  c,
 	})
 }
