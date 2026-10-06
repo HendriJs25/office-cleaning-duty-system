@@ -62,21 +62,21 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 func (h *Handler) GetAllActiveOffices(c *gin.Context) {
-	result, err := h.officeService.GetAllActiveOffices(c.Request.Context())
+	offices, err := h.officeService.GetAllActiveOffices(c.Request.Context())
 	if err != nil {
 		slog.Error("get all office failed", "error", err)
 		response.InternalServerError(c)
 		return
 	}
 
-	if len(result) == 0 {
+	if len(offices) == 0 {
 		response.Empty(c, "オフィス")
 		return
 	}
 
-	var offices []responsedto.GetActiveOfficesResponse
-	for _, office := range result {
-		offices = append(offices, responsedto.GetActiveOfficesResponse{
+	var result []responsedto.GetActiveOfficesResponse
+	for _, office := range offices {
+		result = append(result, responsedto.GetActiveOfficesResponse{
 			ID:   office.ID,
 			Name: office.Name,
 		})
@@ -84,7 +84,7 @@ func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code: http.StatusOK,
-		Data: offices,
+		Data: result,
 		Gin:  c,
 	})
 }

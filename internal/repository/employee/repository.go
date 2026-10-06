@@ -14,6 +14,7 @@ type repository struct {
 
 type Repository interface {
 	Create(context.Context, *model.Employee) error
+	GetAllActive(context.Context) ([]model.Employee, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -28,4 +29,13 @@ func (r *repository) Create(ctx context.Context, employee *model.Employee) error
 		return fmt.Errorf("create employee: %w", err)
 	}
 	return nil
+}
+
+func (r *repository) GetAllActive(ctx context.Context) ([]model.Employee, error) {
+	var employees []model.Employee
+	err := r.db.WithContext(ctx).Where("is_active = ?", true).Order("id ASC").Find(&employees).Error
+	if err != nil {
+		return nil, fmt.Errorf("get all active employees: %w", err)
+	}
+	return employees, nil
 }

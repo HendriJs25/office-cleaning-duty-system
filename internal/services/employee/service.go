@@ -6,6 +6,7 @@ import (
 	employeerepository "cleaning/internal/repository/employee"
 	officerepository "cleaning/internal/repository/office"
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -17,6 +18,7 @@ type service struct {
 
 type Service interface {
 	Create(context.Context, CreateEmployeeInput) error
+	GetAllActiveEmployees(context.Context) ([]GetActiveEmployeesResult, error)
 }
 
 func NewService(employeeRepository employeerepository.Repository, officeRepository officerepository.Repository) Service {
@@ -53,4 +55,26 @@ func (s *service) Create(ctx context.Context, input CreateEmployeeInput) error {
 	}
 
 	return nil
+}
+
+func (s *service) GetAllActiveEmployees(ctx context.Context) ([]GetActiveEmployeesResult, error) {
+	employees, err := s.employeeRepository.GetAllActive(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(employees) == 0 {
+		return []GetActiveEmployeesResult{}, nil
+	}
+
+	var result []GetActiveEmployeesResult
+	var fullName string
+	for _, employee := range employees {
+		fullName = fmt.Sprintf("%s %s", employee.FamilyName, employee.GivenName)
+		result = append(result, GetActiveEmployeesResult{
+			ID:       employee.ID,
+			FullName: fullName,
+		})
+	}
+	return result, nil
 }
