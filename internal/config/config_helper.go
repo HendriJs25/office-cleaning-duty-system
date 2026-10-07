@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -14,9 +13,6 @@ func getEnv(key, fallback string) string {
 	trimmedValue := strings.TrimSpace(value)
 
 	if !exists || trimmedValue == "" {
-		slog.Warn("use default value",
-			"key", key,
-			"fallback", fallback)
 		return fallback
 	}
 
@@ -64,13 +60,11 @@ func getEnvDuration(key string, fallback time.Duration) (time.Duration, error) {
 func getEnvBool(key string, fallback bool) bool {
 	value, exists := os.LookupEnv(key)
 	if !exists {
-		slog.Warn("use default value")
 		return fallback
 	}
 
 	parsedValue, err := strconv.ParseBool(value)
 	if err != nil {
-		slog.Warn("use default value")
 		return fallback
 	}
 	return parsedValue

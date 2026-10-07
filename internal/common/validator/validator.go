@@ -1,8 +1,7 @@
 package validator
 
 import (
-	"log/slog"
-	"os"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -18,7 +17,7 @@ var (
 	katakanaRegex        = regexp.MustCompile(`^[ァ-ヶー]+$`)
 )
 
-func New() *validator.Validate {
+func New() (*validator.Validate, error) {
 	v := validator.New()
 
 	v.RegisterTagNameFunc(func(field reflect.StructField) string {
@@ -29,12 +28,15 @@ func New() *validator.Validate {
 		return name
 	})
 
-	registerCustomValidators(v)
+	err := registerCustomValidators(v)
+	if err != nil {
+		return nil, err
+	}
 
-	return v
+	return v, nil
 }
 
-func registerCustomValidators(v *validator.Validate) {
+func registerCustomValidators(v *validator.Validate) error {
 	validations := map[string]validator.Func{
 		"validpassword":    validPassword,
 		"notblank":         notBlank,
@@ -44,16 +46,15 @@ func registerCustomValidators(v *validator.Validate) {
 
 	for tag, fn := range validations {
 		if err := v.RegisterValidation(tag, fn); err != nil {
-			slog.Error("custom validator failed to register",
-				"tag", tag,
-				"error", err)
-			os.Exit(1)
+			return fmt.Errorf("register custom validator %q failed: %w", tag, err)
 		}
 	}
+
+	return nil
 }
 
-func validPassword(f1 validator.FieldLevel) bool {
-	password := f1.Field().String()
+func validPassword(fl validator.FieldLevel) bool {
+	password := fl.Field().String()
 
 	return len(password) >= 8 &&
 		lowerRegex.MatchString(password) &&
@@ -61,14 +62,14 @@ func validPassword(f1 validator.FieldLevel) bool {
 		numberRegex.MatchString(password)
 }
 
-func notBlank(f1 validator.FieldLevel) bool {
-	return strings.TrimSpace(f1.Field().String()) != ""
+func notBlank(fl validator.FieldLevel) bool {
+	return strings.TrimSpace(fl.Field().String()) != ""
 }
 
-func lowercaseHyphen(f1 validator.FieldLevel) bool {
-	return lowercaseHyphenRegex.MatchString(f1.Field().String())
+func lowercaseHyphen(fl validator.FieldLevel) bool {
+	return lowercaseHyphenRegex.MatchString(fl.Field().String())
 }
 
-func validateKatakana(f1 validator.FieldLevel) bool {
-	return katakanaRegex.MatchString(f1.Field().String())
+func validateKatakana(fl validator.FieldLevel) bool {
+	return katakanaRegex.MatchString(fl.Field().String())
 }

@@ -2,22 +2,19 @@ package main
 
 import (
 	"cleaning/cmd"
-	"log/slog"
-	"os"
+	"log"
 	"time"
 )
 
 func main() {
 	loc, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		slog.Error("error loading timezone", "error", err)
-		os.Exit(1)
+		log.Fatalf("failed to load timezone: %v", err)
 	}
 
 	time.Local = loc
 
 	if err := cmd.Execute(); err != nil {
-		slog.Error("execute failed", "error", err)
-		os.Exit(1)
+		log.Fatalf("execute failed: %v", err)
 	}
 }
