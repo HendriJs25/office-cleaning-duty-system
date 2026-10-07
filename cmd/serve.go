@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"cleaning/internal/bootstrap"
 	"cleaning/internal/common/response"
 	"cleaning/internal/common/validator"
 	"cleaning/internal/constants"
@@ -69,6 +70,8 @@ func runServer() error {
 	handlerRegistry := handler.NewRegistry(serviceRegistry, v)
 	authenticationMiddleware := middleware.NewAuthentication(serviceRegistry.JWTService, sessionRepository)
 	authorizationMiddleware := middleware.NewAuthorization(serviceRegistry.PermissionService)
+
+	bootstrap.SetupAppMode(cfg.App)
 
 	router := gin.New()
 	router.Use(gin.Logger(), middleware.HandlePanic())
