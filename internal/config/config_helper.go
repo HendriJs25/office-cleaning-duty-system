@@ -61,6 +61,21 @@ func getEnvDuration(key string, fallback time.Duration) (time.Duration, error) {
 	return result, nil
 }
 
+func getEnvBool(key string, fallback bool) bool {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		slog.Warn("use default value")
+		return fallback
+	}
+
+	parsedValue, err := strconv.ParseBool(value)
+	if err != nil {
+		slog.Warn("use default value")
+		return fallback
+	}
+	return parsedValue
+}
+
 func validatePort(key, value string) error {
 	port, err := strconv.Atoi(value)
 	if err != nil {
