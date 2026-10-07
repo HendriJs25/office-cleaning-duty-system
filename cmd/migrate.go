@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"cleaning/internal/database/migration"
+	"cleaning/internal/logger"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strconv"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -60,15 +61,17 @@ func runMigrateUp() error {
 	}
 	defer closeInstance(m)
 
+	logger.Log.Info("database migrations started")
+
 	if err = m.Up(); err != nil {
 		if errors.Is(err, migrate.ErrNoChange) {
-			slog.Info("nothing to migrate")
+			logger.Log.Info("nothing to migrate")
 			return nil
 		}
 		return fmt.Errorf("migrate up: %w", err)
 	}
 
-	slog.Info("migration completed successfully")
+	logger.Log.Info("database migrations finished")
 	return nil
 }
 
@@ -79,11 +82,13 @@ func runMigrateDown() error {
 	}
 	defer closeInstance(m)
 
+	logger.Log.Info("database migration rollback started")
+
 	if err = m.Steps(-1); err != nil {
 		return fmt.Errorf("migrate down: %w", err)
 	}
 
-	slog.Info("migration rollback completed")
+	logger.Log.Info("database migration rollback finished")
 	return nil
 }
 
@@ -94,12 +99,13 @@ func runMigrateForce(version int) error {
 	}
 	defer closeInstance(m)
 
+	logger.Log.Info("database migration version forced started")
+
 	if err = m.Force(version); err != nil {
 		return fmt.Errorf("force migration version: %w", err)
 	}
 
-	slog.Info("migration version forced successfully",
-		"version", version)
+	logger.Log.WithField("version", version).Info("database migration version forced finished")
 	return nil
 }
 
@@ -113,15 +119,16 @@ func runMigrateVersion() error {
 	version, dirty, err := m.Version()
 	if err != nil {
 		if errors.Is(err, migrate.ErrNilVersion) {
-			slog.Info("no migrations has been applied")
+			logger.Log.Info("no migrations has been applied")
 			return nil
 		}
 		return fmt.Errorf("get migration version: %w", err)
 	}
 
-	slog.Info("current migration",
-		"version", version,
-		"dirty", dirty)
+	logger.Log.WithFields(logrus.Fields{
+		"version": version,
+		"dirty":   dirty,
+	}).Info("current migration version")
 
 	return nil
 }
@@ -137,10 +144,10 @@ func createMigrateInstance() (*migrate.Migrate, error) {
 func closeInstance(m *migrate.Migrate) {
 	sourceErr, databaseErr := m.Close()
 	if sourceErr != nil {
-		slog.Warn("failed to close migration source", "error", sourceErr)
+		logger.Log.WithField("error", sourceErr).Warn("failed to close migration source")
 	}
 
 	if databaseErr != nil {
-		slog.Warn("failed to close migration database", "error", databaseErr)
+		logger.Log.WithField("error", databaseErr).Warn("failed to close migration database")
 	}
 }

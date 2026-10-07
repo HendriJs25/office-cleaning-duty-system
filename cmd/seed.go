@@ -3,9 +3,9 @@ package cmd
 import (
 	"cleaning/internal/database"
 	"cleaning/internal/database/seeders"
+	"cleaning/internal/logger"
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -28,18 +28,19 @@ func runSeeder() error {
 	}
 	defer func() {
 		if err := postgresDB.Close(); err != nil {
-			slog.Warn("failed to close postgres connection",
-				"error", err)
+			logger.Log.WithField("error", err).Warn("failed to close postgres connection")
 		}
 	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), seedTimeout)
 	defer cancel()
 
+	logger.Log.Info("starting seeder")
+
 	if err := seeders.Run(ctx, postgresDB.DB, cfg.Seed); err != nil {
 		return err
 	}
 
-	slog.Info("seed initialized successfully")
+	logger.Log.Info("seeder finished")
 	return nil
 }

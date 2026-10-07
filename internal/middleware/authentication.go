@@ -4,6 +4,7 @@ import (
 	"cleaning/internal/common/response"
 	"cleaning/internal/constants"
 	errConstant "cleaning/internal/constants/error"
+	"cleaning/internal/logger"
 	sessionrepository "cleaning/internal/repository/session"
 	"cleaning/internal/services/jwt"
 	"errors"
@@ -54,9 +55,13 @@ func (a *Authentication) Handle() gin.HandlerFunc {
 		session, err := a.sessionRepository.Get(c.Request.Context(), token)
 		if err != nil {
 			if errors.Is(err, errConstant.ErrNotFound) {
-				slog.Error("session not found")
+				response.Unauthorized(c, errConstant.ErrUnauthorized)
+				c.Abort()
+				return
 			}
-			response.Unauthorized(c, errConstant.ErrUnauthorized)
+
+			logger.WithRequestID(GetRequestID(c)).WithError(err).Error("failed to get session")
+			response.InternalServerError(c)
 			c.Abort()
 			return
 		}

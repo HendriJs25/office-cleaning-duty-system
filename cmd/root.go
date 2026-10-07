@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"cleaning/internal/bootstrap"
 	"cleaning/internal/config"
 	"fmt"
 
@@ -18,6 +19,9 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("load config failed: %w", err)
 		}
+
+		bootstrap.SetupLogger(cfg.App)
+
 		return nil
 	},
 }

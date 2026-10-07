@@ -7,6 +7,7 @@ import (
 	"cleaning/internal/constants"
 	"cleaning/internal/database"
 	"cleaning/internal/handler"
+	"cleaning/internal/logger"
 	"cleaning/internal/middleware"
 	"cleaning/internal/repository"
 	"cleaning/internal/repository/permissioncache"
@@ -14,10 +15,10 @@ import (
 	"cleaning/internal/routes"
 	"cleaning/internal/services"
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -37,14 +38,15 @@ func runServer() error {
 
 	defer func() {
 		if err := postgresDB.Close(); err != nil {
-			slog.Warn("failed to close postgres connection", "error", err)
+			logger.Log.WithField("error", err).Warn("failed to close postgres connection")
 		}
 	}()
 
-	slog.Info("postgres connection established",
-		"host", cfg.Database.Host,
-		"port", cfg.Database.Port,
-		"name", cfg.Database.Name)
+	logger.Log.WithFields(logrus.Fields{
+		"host": cfg.Database.Host,
+		"port": cfg.Database.Port,
+		"name": cfg.Database.Name,
+	}).Info("postgres connection established")
 
 	redisDB, err := database.NewRedis(cfg.Redis)
 	if err != nil {
@@ -53,20 +55,25 @@ func runServer() error {
 
 	defer func() {
 		if err := redisDB.Close(); err != nil {
-			slog.Warn("failed to close redis connection", "error", err)
+			logger.Log.WithField("error", err).Warn("failed to close redis connection")
 		}
 	}()
 
-	slog.Info("redis connection established",
-		"host", cfg.Redis.Host,
-		"port", cfg.Redis.Port,
-		"database", cfg.Redis.DB)
+	logger.Log.WithFields(logrus.Fields{
+		"host": cfg.Redis.Host,
+		"port": cfg.Redis.Port,
+		"name": cfg.Redis.DB,
+	}).Info("redis connection established")
+
+	v, err := validator.New()
+	if err != nil {
+		return fmt.Errorf("initialize validator failed: %w", err)
+	}
 
 	sessionRepository := session.NewRepository(redisDB.Client)
 	permissionCacheRepository := permissioncache.NewRepository(redisDB.Client)
 	repositoryRegistry := repository.NewRegistry(postgresDB.DB)
 	serviceRegistry := services.NewRegistry(repositoryRegistry, sessionRepository, permissionCacheRepository, cfg.JWT)
-	v := validator.New()
 	handlerRegistry := handler.NewRegistry(serviceRegistry, v)
 	authenticationMiddleware := middleware.NewAuthentication(serviceRegistry.JWTService, sessionRepository)
 	authorizationMiddleware := middleware.NewAuthorization(serviceRegistry.PermissionService)
@@ -74,7 +81,7 @@ func runServer() error {
 	bootstrap.SetupAppMode(cfg.App)
 
 	router := gin.New()
-	router.Use(gin.Logger(), middleware.HandlePanic())
+	router.Use(middleware.RequestID(), middleware.RequestLogger(), middleware.HandlePanic())
 	router.HandleMethodNotAllowed = true
 	router.NoRoute(func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, response.Response{
@@ -94,9 +101,10 @@ func runServer() error {
 	routerRegistry := routes.NewRegistry(group, handlerRegistry, authenticationMiddleware, authorizationMiddleware)
 	routerRegistry.Register()
 
-	slog.Info("starting cleaning app",
-		"environment", cfg.App.Env,
-		"address", cfg.ServerAddress())
+	logger.Log.WithFields(logrus.Fields{
+		"environment": cfg.App.Env,
+		"address":     cfg.ServerAddress(),
+	}).Info("starting cleaning app")
 
 	if err := router.Run(cfg.ServerAddress()); err != nil {
 		return fmt.Errorf("starting server failed: %w", err)
