@@ -8,10 +8,10 @@ import (
 	sessionrepository "cleaning/internal/repository/session"
 	"cleaning/internal/services/jwt"
 	"errors"
-	"log/slog"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 const authenticatedIdentityKey = "authenticated_identity"
@@ -67,7 +67,10 @@ func (a *Authentication) Handle() gin.HandlerFunc {
 		}
 
 		if session.UUID != claims.UserUUID {
-			slog.Error("authentication identity mismatch", "jwt_user_uuid", claims.UserUUID, "session_user_uuid", session.UUID)
+			logger.WithRequestID(GetRequestID(c)).WithFields(logrus.Fields{
+				"jwt_user_uuid":     claims.UserUUID,
+				"session_user_uuid": session.UUID,
+			}).Error("authentication identity mismatch")
 			response.Unauthorized(c, errConstant.ErrUnauthorized)
 			c.Abort()
 			return
@@ -88,7 +91,7 @@ func (a *Authentication) Handle() gin.HandlerFunc {
 func RequireIdentity(c *gin.Context) (Identity, bool) {
 	value, exists := c.Get(authenticatedIdentityKey)
 	if !exists {
-		slog.Error("authenticated identity missing from context")
+		logger.WithRequestID(GetRequestID(c)).Error("authenticated identity missing from context")
 		response.InternalServerError(c)
 		c.Abort()
 		return Identity{}, false
@@ -96,7 +99,7 @@ func RequireIdentity(c *gin.Context) (Identity, bool) {
 
 	identity, ok := value.(Identity)
 	if !ok {
-		slog.Error("invalid authenticated identity type")
+		logger.WithRequestID(GetRequestID(c)).Error("invalid authenticated identity type")
 		response.InternalServerError(c)
 		c.Abort()
 		return Identity{}, false

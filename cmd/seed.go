@@ -28,7 +28,7 @@ func runSeeder() error {
 	}
 	defer func() {
 		if err := postgresDB.Close(); err != nil {
-			logger.Log.WithField("error", err).Warn("failed to close postgres connection")
+			logger.Log.WithError(err).Warn("failed to close postgres connection")
 		}
 	}()
 
