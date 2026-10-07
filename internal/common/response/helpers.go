@@ -25,18 +25,18 @@ func BadRequest(c *gin.Context) {
 	})
 }
 
-func Unauthorized(c *gin.Context) {
-	HTTPResponse(ParamHTTPResponse{
-		Code: http.StatusUnauthorized,
-		Err:  errConstant.ErrInvalidEmailOrPassword,
-		Gin:  c,
-	})
-}
-
 func NotFound(c *gin.Context) {
 	HTTPResponse(ParamHTTPResponse{
 		Code: http.StatusNotFound,
 		Err:  errConstant.ErrNotFound,
+		Gin:  c,
+	})
+}
+
+func Unauthorized(c *gin.Context, err error) {
+	HTTPResponse(ParamHTTPResponse{
+		Code: http.StatusUnauthorized,
+		Err:  err,
 		Gin:  c,
 	})
 }

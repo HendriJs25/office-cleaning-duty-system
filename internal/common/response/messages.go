@@ -15,6 +15,10 @@ func messageJa(err error) string {
 		return "このアカウントは既に無効化されています"
 	case errors.Is(err, errConstant.ErrAlreadyActivated):
 		return "このアカウントは既に有効化されています"
+	case errors.Is(err, errConstant.ErrUnauthorized):
+		return "認証が必要です"
+	case errors.Is(err, errConstant.ErrForbidden):
+		return "この操作を実行する権限がありません"
 	case errors.Is(err, errConstant.ErrNotFound):
 		return "該当するデータがありません"
 	case errors.Is(err, errConstant.ErrBadRequest):

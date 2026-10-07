@@ -8,7 +8,6 @@ import (
 	"cleaning/internal/services/jwt"
 	"errors"
 	"log/slog"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -40,13 +39,15 @@ func (a *Authentication) Handle() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, err := c.Cookie(constants.AccessTokenName)
 		if err != nil {
-			abortUnauthorized(c)
+			response.Unauthorized(c, errConstant.ErrUnauthorized)
+			c.Abort()
 			return
 		}
 
 		claims, err := a.jwtService.ValidateAccessToken(token)
 		if err != nil {
-			abortUnauthorized(c)
+			response.Unauthorized(c, errConstant.ErrUnauthorized)
+			c.Abort()
 			return
 		}
 
@@ -55,13 +56,15 @@ func (a *Authentication) Handle() gin.HandlerFunc {
 			if errors.Is(err, errConstant.ErrNotFound) {
 				slog.Error("session not found")
 			}
-			abortUnauthorized(c)
+			response.Unauthorized(c, errConstant.ErrUnauthorized)
+			c.Abort()
 			return
 		}
 
 		if session.UUID != claims.UserUUID {
 			slog.Error("authentication identity mismatch", "jwt_user_uuid", claims.UserUUID, "session_user_uuid", session.UUID)
-			abortUnauthorized(c)
+			response.Unauthorized(c, errConstant.ErrUnauthorized)
+			c.Abort()
 			return
 		}
 
@@ -81,30 +84,18 @@ func RequireIdentity(c *gin.Context) (Identity, bool) {
 	value, exists := c.Get(authenticatedIdentityKey)
 	if !exists {
 		slog.Error("authenticated identity missing from context")
-		abortInternalServerError(c)
+		response.InternalServerError(c)
+		c.Abort()
 		return Identity{}, false
 	}
 
 	identity, ok := value.(Identity)
 	if !ok {
 		slog.Error("invalid authenticated identity type")
-		abortInternalServerError(c)
+		response.InternalServerError(c)
+		c.Abort()
 		return Identity{}, false
 	}
 
 	return identity, true
-}
-
-func abortUnauthorized(c *gin.Context) {
-	c.AbortWithStatusJSON(http.StatusUnauthorized, response.Response{
-		Status:  constants.Error,
-		Message: "認証が必要です。",
-	})
-}
-
-func abortInternalServerError(c *gin.Context) {
-	c.AbortWithStatusJSON(http.StatusInternalServerError, response.Response{
-		Status:  constants.Error,
-		Message: "サーバー内部でエラーが発生しました。",
-	})
 }
