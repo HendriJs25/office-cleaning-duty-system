@@ -144,10 +144,10 @@ func createMigrateInstance() (*migrate.Migrate, error) {
 func closeInstance(m *migrate.Migrate) {
 	sourceErr, databaseErr := m.Close()
 	if sourceErr != nil {
-		logger.Log.WithField("error", sourceErr).Warn("failed to close migration source")
+		logger.Log.WithError(sourceErr).Warn("failed to close migration source")
 	}
 
 	if databaseErr != nil {
-		logger.Log.WithField("error", databaseErr).Warn("failed to close migration database")
+		logger.Log.WithError(databaseErr).Warn("failed to close migration database")
 	}
 }
