@@ -2,10 +2,8 @@ package middleware
 
 import (
 	"cleaning/internal/common/response"
-	"cleaning/internal/constants"
 	"io"
 	"log/slog"
-	"net/http"
 	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
@@ -21,10 +19,7 @@ func HandlePanic() gin.HandlerFunc {
 			"stack", string(debug.Stack()),
 		)
 
-		c.AbortWithStatusJSON(http.StatusInternalServerError, response.Response{
-			Status:  constants.Error,
-			Message: "サーバー内部でエラーが発生しました。",
-		})
-
+		response.InternalServerError(c)
+		c.Abort()
 	})
 }

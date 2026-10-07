@@ -2,9 +2,8 @@ package middleware
 
 import (
 	"cleaning/internal/common/response"
-	"cleaning/internal/constants"
+	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/services/permission"
-	"net/http"
 	"slices"
 
 	"github.com/gin-gonic/gin"
@@ -29,15 +28,14 @@ func (a *Authorization) RequirePermission(requiredPermission string) gin.Handler
 
 		permissions, err := a.permissionService.GetCodesByRoleID(c.Request.Context(), identity.RoleID)
 		if err != nil {
-			abortInternalServerError(c)
+			response.InternalServerError(c)
+			c.Abort()
 			return
 		}
 
 		if !hasPermission(permissions, requiredPermission) {
-			c.AbortWithStatusJSON(http.StatusForbidden, response.Response{
-				Status:  constants.Error,
-				Message: "この操作を実行する権限がありません。",
-			})
+			response.Forbidden(c, errConstant.ErrForbidden)
+			c.Abort()
 			return
 		}
 		c.Next()

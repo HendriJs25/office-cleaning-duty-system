@@ -50,7 +50,7 @@ func (h *Handler) Login(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound) || errors.Is(err, errConstant.ErrPasswordIncorrect):
-			response.Unauthorized(c)
+			response.Unauthorized(c, errConstant.ErrInvalidEmailOrPassword)
 			return
 		case errors.Is(err, errConstant.ErrAccountIsDeactivated):
 			response.Forbidden(c, err)
