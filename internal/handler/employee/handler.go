@@ -5,9 +5,9 @@ import (
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
 	responsedto "cleaning/internal/domain/dto/response"
+	"cleaning/internal/logger"
 	employeeservice "cleaning/internal/services/employee"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -58,7 +58,7 @@ func (h *Handler) Create(c *gin.Context) {
 			response.InactiveOption(c, err, "オフィス")
 			return
 		default:
-			slog.Error("create employee failed", "error", err)
+			logger.WithContext(c.Request.Context()).WithError(err).Error("Create employee failed")
 			response.InternalServerError(c)
 			return
 		}
@@ -74,7 +74,7 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) GetAllActiveEmployees(c *gin.Context) {
 	employees, err := h.employeeService.GetAllActiveEmployees(c.Request.Context())
 	if err != nil {
-		slog.Error("get all active employee failed", "error", err)
+		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all active employees failed")
 		response.InternalServerError(c)
 		return
 	}

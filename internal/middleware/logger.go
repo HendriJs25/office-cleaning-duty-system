@@ -23,7 +23,7 @@ func RequestLogger() gin.HandlerFunc {
 			path = path + "?" + raw
 		}
 
-		entry := logger.WithRequestID(GetRequestID(c)).WithFields(logrus.Fields{
+		entry := logger.WithContext(c.Request.Context()).WithFields(logrus.Fields{
 			"method":     c.Request.Method,
 			"path":       path,
 			"status":     status,

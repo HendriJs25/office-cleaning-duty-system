@@ -3,8 +3,8 @@ package role
 import (
 	"cleaning/internal/common/response"
 	responsedto "cleaning/internal/domain/dto/response"
+	"cleaning/internal/logger"
 	roleservice "cleaning/internal/services/role"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ func NewHandler(roleService roleservice.Service) *Handler {
 func (h *Handler) GetAll(c *gin.Context) {
 	result, err := h.roleService.GetAll(c.Request.Context())
 	if err != nil {
-		slog.Error("get all roles failed", "error", err)
+		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all roles failed")
 		response.InternalServerError(c)
 		return
 	}
@@ -53,7 +53,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 func (h *Handler) GetAllActiveRoles(c *gin.Context) {
 	result, err := h.roleService.GetAllActiveRoles(c.Request.Context())
 	if err != nil {
-		slog.Error("get all active roles failed", "error", err)
+		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all active roles failed")
 		response.InternalServerError(c)
 		return
 	}

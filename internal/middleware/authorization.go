@@ -29,7 +29,7 @@ func (a *Authorization) RequirePermission(requiredPermission string) gin.Handler
 
 		permissions, err := a.permissionService.GetCodesByRoleID(c.Request.Context(), identity.RoleID)
 		if err != nil {
-			logger.WithRequestID(GetRequestID(c)).WithError(err).Error("failed to get permissions code")
+			logger.WithContext(c.Request.Context()).WithError(err).Error("failed to get permissions code")
 			response.InternalServerError(c)
 			c.Abort()
 			return

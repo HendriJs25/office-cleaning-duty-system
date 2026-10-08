@@ -5,9 +5,9 @@ import (
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
 	responsedto "cleaning/internal/domain/dto/response"
+	"cleaning/internal/logger"
 	officeservice "cleaning/internal/services/office"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -48,7 +48,7 @@ func (h *Handler) Create(c *gin.Context) {
 			response.ConflictDuplicate(c, err, "コード")
 			return
 		default:
-			slog.Error("create office failed", "error", err)
+			logger.WithContext(c.Request.Context()).WithError(err).Error("Create office failed")
 			response.InternalServerError(c)
 			return
 		}
@@ -64,7 +64,7 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 	offices, err := h.officeService.GetAllActiveOffices(c.Request.Context())
 	if err != nil {
-		slog.Error("get all office failed", "error", err)
+		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all active offices failed")
 		response.InternalServerError(c)
 		return
 	}
