@@ -21,9 +21,15 @@ type Postgres struct {
 	sqlDB *sql.DB
 }
 
-func NewPostgres(cfg *config.Database) (*Postgres, error) {
-	gormDB, err := gorm.Open(postgres.Open(BuildPostgresURL(cfg)), &gorm.Config{
-		Logger:               logger.Default.LogMode(logger.Info),
+func NewPostgres(cfg *config.Config) (*Postgres, error) {
+	logLevel := logger.Warn
+
+	if cfg.App.IsDebugMode {
+		logLevel = logger.Info
+	}
+
+	gormDB, err := gorm.Open(postgres.Open(BuildPostgresURL(cfg.Database)), &gorm.Config{
+		Logger:               logger.Default.LogMode(logLevel),
 		DisableAutomaticPing: true,
 		TranslateError:       true,
 	})
@@ -36,10 +42,10 @@ func NewPostgres(cfg *config.Database) (*Postgres, error) {
 		return nil, fmt.Errorf("get sql database handle: %w", err)
 	}
 
-	sqlDB.SetMaxOpenConns(cfg.MaxOpenConnections)
-	sqlDB.SetConnMaxLifetime(time.Duration(cfg.MaxLifetimeConnections) * time.Second)
-	sqlDB.SetMaxIdleConns(cfg.MaxIdleConnections)
-	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.MaxIdleTime) * time.Second)
+	sqlDB.SetMaxOpenConns(cfg.Database.MaxOpenConnections)
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Database.MaxLifetimeConnections) * time.Second)
+	sqlDB.SetMaxIdleConns(cfg.Database.MaxIdleConnections)
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Database.MaxIdleTime) * time.Second)
 
 	ctx, cancel := context.WithTimeout(context.Background(), databasePingTimeout)
 	defer cancel()

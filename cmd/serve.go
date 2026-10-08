@@ -31,7 +31,7 @@ var serveCmd = &cobra.Command{
 }
 
 func runServer() error {
-	postgresDB, err := database.NewPostgres(cfg.Database)
+	postgresDB, err := database.NewPostgres(cfg)
 	if err != nil {
 		return fmt.Errorf("connect to postgres failed: %w", err)
 	}
