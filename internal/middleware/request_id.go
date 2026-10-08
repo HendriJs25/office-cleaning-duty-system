@@ -1,28 +1,21 @@
 package middleware
 
 import (
+	"cleaning/internal/common/requestcontext"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
-
-const RequestIDKey = "request_id"
 
 func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestID := uuid.NewString()
 
-		c.Set(RequestIDKey, requestID)
+		ctx := requestcontext.WithRequestID(c.Request.Context(), requestID)
+		c.Request = c.Request.WithContext(ctx)
+
 		c.Header("X-Request-ID", requestID)
 
 		c.Next()
 	}
-}
-
-func GetRequestID(c *gin.Context) string {
-	requestID, _ := c.Get(RequestIDKey)
-
-	if value, ok := requestID.(string); ok {
-		return value
-	}
-	return ""
 }

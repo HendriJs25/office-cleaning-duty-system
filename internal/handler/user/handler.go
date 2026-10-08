@@ -5,9 +5,9 @@ import (
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
 	responsedto "cleaning/internal/domain/dto/response"
+	"cleaning/internal/logger"
 	userservice "cleaning/internal/services/user"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +30,7 @@ func NewHandler(userService userservice.Service, validate *customValidator.Valid
 func (h *Handler) GetAll(c *gin.Context) {
 	result, err := h.UserService.GetAll(c.Request.Context())
 	if err != nil {
-		slog.Error("get all users failed", "error", err)
+		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all user failed")
 		response.InternalServerError(c)
 		return
 	}
@@ -71,7 +71,7 @@ func (h *Handler) GetUserDetail(c *gin.Context) {
 			response.NotFound(c)
 			return
 		default:
-			slog.Error("get user detail failed", "uuid", parsedUUID, "error", err)
+			logger.WithContext(c.Request.Context()).WithField("user_uuid", parsedUUID).WithError(err).Error("failed to get user detail")
 			response.InternalServerError(c)
 			return
 		}
@@ -147,7 +147,7 @@ func (h *Handler) Create(c *gin.Context) {
 			response.ConflictDuplicate(c, err, "メールアドレス")
 			return
 		default:
-			slog.Error("create user failed", "error", err)
+			logger.WithContext(c.Request.Context()).WithError(err).Error("failed to create user")
 			response.InternalServerError(c)
 			return
 		}
@@ -178,7 +178,7 @@ func (h *Handler) DeactivateUser(c *gin.Context) {
 			response.Conflict(c, err)
 			return
 		default:
-			slog.Error("deactivate user failed", "uuid", parsedUUID, "error", err)
+			logger.WithContext(c.Request.Context()).WithField("user_uuid", parsedUUID).WithError(err).Error("failed to deactivate user")
 			response.InternalServerError(c)
 			return
 		}
@@ -209,7 +209,7 @@ func (h *Handler) ActivateUser(c *gin.Context) {
 			response.Conflict(c, err)
 			return
 		default:
-			slog.Error("activate user failed", "uuid", parsedUUID, "error", err)
+			logger.WithContext(c.Request.Context()).WithField("user_uuid", parsedUUID).WithError(err).Error("failed to activate user")
 			response.InternalServerError(c)
 			return
 		}

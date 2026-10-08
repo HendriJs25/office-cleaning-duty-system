@@ -6,10 +6,10 @@ import (
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/dto/request"
 	responsedto "cleaning/internal/domain/dto/response"
+	"cleaning/internal/logger"
 	"cleaning/internal/middleware"
 	authservice "cleaning/internal/services/auth"
 	"errors"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -56,7 +56,7 @@ func (h *Handler) Login(c *gin.Context) {
 			response.Forbidden(c, err)
 			return
 		default:
-			slog.Error("login failed", "email", req.Email, "error", err)
+			logger.WithContext(c.Request.Context()).WithError(err).Error("Login failed")
 			response.InternalServerError(c)
 			return
 		}
@@ -89,7 +89,7 @@ func (h *Handler) Logout(c *gin.Context) {
 
 	err := h.authService.Logout(c.Request.Context(), identity.Token)
 	if err != nil {
-		slog.Error("logout failed", "error", err)
+		logger.WithContext(c.Request.Context()).WithError(err).Error("Logout failed")
 		response.InternalServerError(c)
 	}
 

@@ -2,11 +2,11 @@ package permission
 
 import (
 	errConstant "cleaning/internal/constants/error"
+	"cleaning/internal/logger"
 	permissionrepository "cleaning/internal/repository/permission"
 	permissioncacherepository "cleaning/internal/repository/permissioncache"
 	"context"
 	"errors"
-	"log/slog"
 )
 
 type service struct {
@@ -32,7 +32,7 @@ func (s *service) GetCodesByRoleID(ctx context.Context, roleID int64) ([]string,
 	}
 
 	if !errors.Is(err, errConstant.ErrNotFound) {
-		slog.Error("get cache code permissions by role id failed ", "err", err)
+		logger.WithContext(ctx).WithField("role_id", roleID).WithError(err).Error("failed to get cached permission codes by role ID")
 	}
 
 	codes, err = s.permissionRepository.FindCodesByRoleID(ctx, roleID)
@@ -41,7 +41,7 @@ func (s *service) GetCodesByRoleID(ctx context.Context, roleID int64) ([]string,
 	}
 
 	if err := s.permissionCacheRepository.SetRolePermissions(ctx, roleID, codes); err != nil {
-		slog.Error("set cache role permissions", "error", err)
+		logger.WithContext(ctx).WithField("role_id", roleID).WithError(err).Error("failed to set cached permission codes by role ID")
 	}
 
 	return codes, nil

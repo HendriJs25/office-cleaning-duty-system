@@ -60,14 +60,14 @@ func (a *Authentication) Handle() gin.HandlerFunc {
 				return
 			}
 
-			logger.WithRequestID(GetRequestID(c)).WithError(err).Error("failed to get session")
+			logger.WithContext(c.Request.Context()).WithError(err).Error("failed to get session")
 			response.InternalServerError(c)
 			c.Abort()
 			return
 		}
 
 		if session.UUID != claims.UserUUID {
-			logger.WithRequestID(GetRequestID(c)).WithFields(logrus.Fields{
+			logger.WithContext(c.Request.Context()).WithFields(logrus.Fields{
 				"jwt_user_uuid":     claims.UserUUID,
 				"session_user_uuid": session.UUID,
 			}).Error("authentication identity mismatch")
@@ -91,7 +91,7 @@ func (a *Authentication) Handle() gin.HandlerFunc {
 func RequireIdentity(c *gin.Context) (Identity, bool) {
 	value, exists := c.Get(authenticatedIdentityKey)
 	if !exists {
-		logger.WithRequestID(GetRequestID(c)).Error("authenticated identity missing from context")
+		logger.WithContext(c.Request.Context()).Error("authenticated identity missing from context")
 		response.InternalServerError(c)
 		c.Abort()
 		return Identity{}, false
@@ -99,7 +99,7 @@ func RequireIdentity(c *gin.Context) (Identity, bool) {
 
 	identity, ok := value.(Identity)
 	if !ok {
-		logger.WithRequestID(GetRequestID(c)).Error("invalid authenticated identity type")
+		logger.WithContext(c.Request.Context()).Error("invalid authenticated identity type")
 		response.InternalServerError(c)
 		c.Abort()
 		return Identity{}, false
