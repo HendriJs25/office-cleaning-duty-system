@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	customValidator "github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -71,8 +72,20 @@ func (h *Handler) Create(c *gin.Context) {
 	})
 }
 
-func (h *Handler) GetAllActiveEmployees(c *gin.Context) {
-	employees, err := h.employeeService.GetAllActiveEmployees(c.Request.Context())
+func (h *Handler) GetAllAssignableEmployees(c *gin.Context) {
+	var userUUID *uuid.UUID
+
+	if uuidStr := c.Query("user_uuid"); uuidStr != "" {
+		parsedUUID, err := uuid.Parse(uuidStr)
+		if err != nil {
+			response.BadRequest(c)
+			return
+		}
+
+		userUUID = &parsedUUID
+	}
+
+	employees, err := h.employeeService.GetAllAssignableEmployees(c.Request.Context(), userUUID)
 	if err != nil {
 		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all active employees failed")
 		response.InternalServerError(c)

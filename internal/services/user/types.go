@@ -36,3 +36,9 @@ type CreateUserInput struct {
 	Email      string
 	Password   string
 }
+
+type UpdateUserByAdminInput struct {
+	RoleID     int64
+	EmployeeID *int64
+	IsActive   bool
+}

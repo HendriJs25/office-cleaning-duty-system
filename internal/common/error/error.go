@@ -42,6 +42,8 @@ var FieldNameJa = map[string]string{
 	"GivenNameKana":       "名（カナ）",
 	"EmploymentStartDate": "勤務開始日",
 	"EmploymentEndDate":   "勤務終了日",
+	"RoleID":              "ロール",
+	"IsActive":            "アカウント状態",
 }
 
 func ErrValidationResponse(err error) (validationResponse []ValidationResponse) {

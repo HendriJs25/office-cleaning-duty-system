@@ -18,7 +18,7 @@ type service struct {
 
 type Service interface {
 	Create(context.Context, CreateEmployeeInput) error
-	GetAllActiveEmployees(context.Context) ([]GetActiveEmployeesResult, error)
+	GetAllAssignableEmployees(context.Context, *uuid.UUID) ([]GetAssignableEmployeesResult, error)
 }
 
 func NewService(employeeRepository employeerepository.Repository, officeRepository officerepository.Repository) Service {
@@ -57,21 +57,21 @@ func (s *service) Create(ctx context.Context, input CreateEmployeeInput) error {
 	return nil
 }
 
-func (s *service) GetAllActiveEmployees(ctx context.Context) ([]GetActiveEmployeesResult, error) {
-	employees, err := s.employeeRepository.FindAllActive(ctx)
+func (s *service) GetAllAssignableEmployees(ctx context.Context, userUUID *uuid.UUID) ([]GetAssignableEmployeesResult, error) {
+	employees, err := s.employeeRepository.FindAssignableEmployees(ctx, userUUID)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(employees) == 0 {
-		return []GetActiveEmployeesResult{}, nil
+		return []GetAssignableEmployeesResult{}, nil
 	}
 
-	var result []GetActiveEmployeesResult
+	var result []GetAssignableEmployeesResult
 	var fullName string
 	for _, employee := range employees {
 		fullName = fmt.Sprintf("%s %s", employee.FamilyName, employee.GivenName)
-		result = append(result, GetActiveEmployeesResult{
+		result = append(result, GetAssignableEmployeesResult{
 			ID:       employee.ID,
 			FullName: fullName,
 		})

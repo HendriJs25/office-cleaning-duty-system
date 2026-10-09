@@ -28,6 +28,7 @@ type Service interface {
 	Create(context.Context, CreateUserInput) error
 	DeactivateUser(context.Context, uuid.UUID) error
 	ActivateUser(context.Context, uuid.UUID) error
+	UpdateUserByAdmin(context.Context, uuid.UUID, uuid.UUID, UpdateUserByAdminInput) error
 }
 
 func NewService(userRepository userrepository.Repository, roleRepository rolerepository.Repository, employeeRepository employeerepository.Repository, sessionRepository sessionrepository.Repository) Service {
@@ -101,13 +102,15 @@ func (s *service) Create(ctx context.Context, createInput CreateUserInput) error
 		return errConstant.ErrRoleInActive
 	}
 
-	employee, err := s.employeeRepository.FindByID(ctx, createInput.EmployeeID)
-	if err != nil {
-		return err
-	}
+	if createInput.EmployeeID != nil {
+		employee, err := s.employeeRepository.FindByID(ctx, createInput.EmployeeID)
+		if err != nil {
+			return err
+		}
 
-	if !employee.IsActive {
-		return errConstant.ErrEmployeeInActive
+		if !employee.IsActive {
+			return errConstant.ErrEmployeeInActive
+		}
 	}
 
 	normalizedEmail := email.Normalize(createInput.Email)
@@ -176,5 +179,55 @@ func (s *service) ActivateUser(ctx context.Context, uuid uuid.UUID) error {
 	if err := s.userRepository.UpdateStatus(ctx, user.UUID, true); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *service) UpdateUserByAdmin(ctx context.Context, actorUUID uuid.UUID, targetUUID uuid.UUID, update UpdateUserByAdminInput) error {
+	if actorUUID == targetUUID {
+		return errConstant.ErrCannotUpdateSelf
+	}
+
+	role, err := s.roleRepository.FindByID(ctx, update.RoleID)
+	if err != nil {
+		return err
+	}
+	if !role.IsActive {
+		return errConstant.ErrRoleInActive
+	}
+
+	if update.EmployeeID != nil {
+		employee, err := s.employeeRepository.FindByID(ctx, update.EmployeeID)
+		if err != nil {
+			return err
+		}
+
+		if !employee.IsActive {
+			return errConstant.ErrEmployeeInActive
+		}
+	}
+
+	user, err := s.userRepository.FindByUUID(ctx, targetUUID)
+	if err != nil {
+		return err
+	}
+
+	fields := map[string]any{
+		"role_id":     update.RoleID,
+		"employee_id": update.EmployeeID,
+		"is_active":   update.IsActive,
+	}
+
+	err = s.userRepository.UpdateByUUID(ctx, targetUUID, fields)
+	if err != nil {
+		return err
+	}
+
+	if user.RoleID != update.RoleID || !update.IsActive {
+		err := s.sessionRepository.DeleteByUserUUID(ctx, targetUUID)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

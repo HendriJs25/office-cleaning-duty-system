@@ -6,6 +6,7 @@ import (
 	"cleaning/internal/domain/dto/request"
 	responsedto "cleaning/internal/domain/dto/response"
 	"cleaning/internal/logger"
+	"cleaning/internal/middleware"
 	userservice "cleaning/internal/services/user"
 	"errors"
 	"net/http"
@@ -143,6 +144,9 @@ func (h *Handler) Create(c *gin.Context) {
 		case errors.Is(err, errConstant.ErrEmployeeInActive):
 			response.InactiveOption(c, err, "従業員")
 			return
+		case errors.Is(err, errConstant.ErrEmployeeAlreadyAssigned):
+			response.Conflict(c, err)
+			return
 		case errors.Is(err, errConstant.ErrAlreadyExists):
 			response.ConflictDuplicate(c, err, "メールアドレス")
 			return
@@ -218,6 +222,74 @@ func (h *Handler) ActivateUser(c *gin.Context) {
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code:    http.StatusOK,
 		Message: "ユーザーを有効化しました",
+		Gin:     c,
+	})
+}
+
+func (h *Handler) UpdateUserByAdmin(c *gin.Context) {
+	identity, ok := middleware.RequireIdentity(c)
+	if !ok {
+		return
+	}
+
+	uuidStr := c.Param("uuid")
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	var req request.UpdateUserByAdminRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	err = h.UserService.UpdateUserByAdmin(c.Request.Context(), identity.UUID, parsedUUID, userservice.UpdateUserByAdminInput{
+		RoleID:     req.RoleID,
+		EmployeeID: req.EmployeeID,
+		IsActive:   *req.IsActive,
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrCannotUpdateSelf):
+			response.Forbidden(c, err)
+			return
+		case errors.Is(err, errConstant.ErrRoleNotFound):
+			response.InvalidOption(c, err, "ロール")
+			return
+		case errors.Is(err, errConstant.ErrEmployeeNotFound):
+			response.InvalidOption(c, err, "従業員")
+			return
+		case errors.Is(err, errConstant.ErrRoleInActive):
+			response.InactiveOption(c, err, "ロール")
+			return
+		case errors.Is(err, errConstant.ErrEmployeeInActive):
+			response.InactiveOption(c, err, "従業員")
+			return
+		case errors.Is(err, errConstant.ErrEmployeeAlreadyAssigned):
+			response.Conflict(c, err)
+			return
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.NotFound(c)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("user_uuid", parsedUUID).WithError(err).Error("failed to update user")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "ユーザー情報を更新しました",
 		Gin:     c,
 	})
 }
