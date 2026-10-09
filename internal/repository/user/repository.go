@@ -22,6 +22,7 @@ type Repository interface {
 	FindByUUID(context.Context, uuid.UUID) (*model.User, error)
 	ExistByEmail(context.Context, string) (bool, error)
 	Create(context.Context, *model.User) error
+	UpdateByUUID(context.Context, uuid.UUID, map[string]any) error
 	UpdateLastLoginAt(context.Context, uuid.UUID) error
 	UpdateStatus(context.Context, uuid.UUID, bool) error
 }
@@ -72,7 +73,24 @@ func (r *repository) ExistByEmail(ctx context.Context, email string) (bool, erro
 
 func (r *repository) Create(ctx context.Context, user *model.User) error {
 	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return errConstant.ErrEmployeeAlreadyAssigned
+		}
 		return fmt.Errorf("create user: %w", err)
+	}
+	return nil
+}
+
+func (r *repository) UpdateByUUID(ctx context.Context, userUUID uuid.UUID, fields map[string]any) error {
+	result := r.db.WithContext(ctx).Model(&model.User{}).Where("uuid = ?", userUUID).Updates(fields)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+			return errConstant.ErrEmployeeAlreadyAssigned
+		}
+		return fmt.Errorf("update user by uuid: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return errConstant.ErrNotFound
 	}
 	return nil
 }

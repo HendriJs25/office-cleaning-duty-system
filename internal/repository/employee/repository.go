@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -18,6 +19,7 @@ type Repository interface {
 	Create(context.Context, *model.Employee) error
 	FindAllActive(context.Context) ([]model.Employee, error)
 	FindByID(context.Context, *int64) (*model.Employee, error)
+	FindAssignableEmployees(context.Context, *uuid.UUID) ([]model.Employee, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -53,4 +55,20 @@ func (r *repository) FindByID(ctx context.Context, id *int64) (*model.Employee, 
 		return nil, fmt.Errorf("find employee by id: %w", err)
 	}
 	return &employee, nil
+}
+
+func (r *repository) FindAssignableEmployees(ctx context.Context, userUUID *uuid.UUID) ([]model.Employee, error) {
+	var employees []model.Employee
+
+	subquery := r.db.WithContext(ctx).Table("users").Select("1").Where("users.employee_id = employees.id")
+
+	if userUUID != nil {
+		subquery = subquery.Where("users.uuid <> ?", *userUUID)
+	}
+
+	err := r.db.WithContext(ctx).Model(&model.Employee{}).Where("employees.is_active = ?", true).Where("NOT EXISTS (?)", subquery).Find(&employees).Error
+	if err != nil {
+		return nil, fmt.Errorf("find all assignable employees: %w", err)
+	}
+	return employees, nil
 }

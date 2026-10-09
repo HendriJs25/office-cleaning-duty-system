@@ -13,3 +13,9 @@ type CreateUserRequest struct {
 	Password        string `json:"password" validate:"required,validpassword"`
 	PasswordConfirm string `json:"password_confirm" validate:"required,eqfield=Password"`
 }
+
+type UpdateUserByAdminRequest struct {
+	RoleID     int64  `json:"role_id" validate:"required"`
+	EmployeeID *int64 `json:"employee_id"`
+	IsActive   *bool  `json:"is_active" validate:"required"`
+}
