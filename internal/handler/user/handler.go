@@ -36,12 +36,12 @@ func (h *Handler) GetAll(c *gin.Context) {
 		return
 	}
 
-	var users []responsedto.UserResponse
+	var users []responsedto.UserInfoResponse
 	for _, user := range result {
-		users = append(users, responsedto.UserResponse{
+		users = append(users, responsedto.UserInfoResponse{
 			ID:          user.ID,
 			UUID:        user.UUID,
-			Username:    user.UserName,
+			UserName:    user.UserName,
 			Email:       user.Email,
 			IsActive:    &user.IsActive,
 			LastLoginAt: user.LastLoginAt,
@@ -90,10 +90,10 @@ func (h *Handler) GetUserDetail(c *gin.Context) {
 	}
 
 	userDetail := responsedto.UserDetailResponse{
-		User: responsedto.UserResponse{
+		User: responsedto.UserInfoResponse{
 			ID:          userResult.User.ID,
 			UUID:        userResult.User.UUID,
-			Username:    userResult.User.UserName,
+			UserName:    userResult.User.UserName,
 			Email:       userResult.User.Email,
 			IsActive:    &userResult.User.IsActive,
 			LastLoginAt: userResult.User.LastLoginAt,
@@ -105,6 +105,49 @@ func (h *Handler) GetUserDetail(c *gin.Context) {
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code: http.StatusOK,
 		Data: userDetail,
+		Gin:  c,
+	})
+}
+
+func (h *Handler) GetProfile(c *gin.Context) {
+	identity, ok := middleware.RequireIdentity(c)
+	if !ok {
+		return
+	}
+
+	userProfileResult, err := h.UserService.GetProfile(c.Request.Context(), identity.UUID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.NotFound(c)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("user_uuid", identity.UUID).WithError(err).Error("failed to get user profile")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	var employeeProfile *responsedto.EmployeeProfileResponse
+	if userProfileResult.Employee != nil {
+		employeeProfile = &responsedto.EmployeeProfileResponse{
+			OfficeName:          userProfileResult.Employee.OfficeName,
+			FullName:            userProfileResult.Employee.FullName,
+			FullNameKana:        userProfileResult.Employee.FullNameKana,
+			EmploymentStartDate: userProfileResult.Employee.EmploymentStartDate,
+		}
+	}
+
+	userProfile := responsedto.UserProfileResponse{
+		UserName: userProfileResult.UserName,
+		Email:    userProfileResult.Email,
+		RoleName: userProfileResult.RoleName,
+		Employee: employeeProfile,
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code: http.StatusOK,
+		Data: userProfile,
 		Gin:  c,
 	})
 }

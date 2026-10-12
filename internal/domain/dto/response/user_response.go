@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserResponse struct {
+type UserInfoResponse struct {
 	ID          int64      `json:"id"`
 	UUID        uuid.UUID  `json:"uuid"`
-	Username    string     `json:"user_name"`
+	UserName    string     `json:"user_name"`
 	Email       string     `json:"email"`
 	IsActive    *bool      `json:"is_active,omitempty"`
 	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
@@ -25,10 +25,23 @@ type EmployeeInfoResponse struct {
 }
 
 type UserDetailResponse struct {
-	User     UserResponse          `json:"user"`
+	User     UserInfoResponse      `json:"user"`
 	Employee *EmployeeInfoResponse `json:"employee,omitempty"`
 }
 
+type EmployeeProfileResponse struct {
+	OfficeName          string     `json:"office_name"`
+	FullName            string     `json:"full_name"`
+	FullNameKana        string     `json:"full_name_kana"`
+	EmploymentStartDate *time.Time `json:"employment_start_date,omitempty"`
+}
+
+type UserProfileResponse struct {
+	UserName string                   `json:"user_name"`
+	Email    string                   `json:"email"`
+	RoleName string                   `json:"role_name"`
+	Employee *EmployeeProfileResponse `json:"employee,omitempty"`
+}
 type LoginResponse struct {
-	User *UserResponse `json:"auth"`
+	User *UserInfoResponse `json:"auth"`
 }

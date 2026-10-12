@@ -9,6 +9,8 @@ import (
 )
 
 func Register(router *gin.RouterGroup, handler *userhandler.Handler, authorization *middleware.Authorization) {
+	router.GET("/users/profile", handler.GetProfile)
+
 	router.GET("/users", authorization.RequirePermission(constants.PermissionUserRead), handler.GetAll)
 	router.POST("/users", authorization.RequirePermission(constants.PermissionUserCreate), handler.Create)
 	router.GET("/users/:uuid", authorization.RequirePermission(constants.PermissionUserRead), handler.GetUserDetail)
