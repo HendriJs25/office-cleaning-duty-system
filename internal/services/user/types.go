@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type GetUserResult struct {
+type GetUserInfoResult struct {
 	ID          int64
 	UUID        uuid.UUID
 	UserName    string
@@ -16,7 +16,7 @@ type GetUserResult struct {
 	RoleName    string
 }
 
-type EmployeeInfo struct {
+type GetEmployeeInfoResult struct {
 	ID                  int64
 	UUID                uuid.UUID
 	OfficeName          string
@@ -25,8 +25,21 @@ type EmployeeInfo struct {
 }
 
 type GetUserDetailResult struct {
-	User     GetUserResult
-	Employee *EmployeeInfo
+	User     GetUserInfoResult
+	Employee *GetEmployeeInfoResult
+}
+type GetEmployeeProfileResult struct {
+	OfficeName          string
+	FullName            string
+	FullNameKana        string
+	EmploymentStartDate *time.Time
+}
+
+type GetUserProfileResult struct {
+	UserName string
+	Email    string
+	RoleName string
+	Employee *GetEmployeeProfileResult
 }
 
 type CreateUserInput struct {

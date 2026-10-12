@@ -23,8 +23,9 @@ type service struct {
 }
 
 type Service interface {
-	GetAll(context.Context) ([]GetUserResult, error)
+	GetAll(context.Context) ([]GetUserInfoResult, error)
 	GetUserDetail(context.Context, uuid.UUID) (*GetUserDetailResult, error)
+	GetProfile(context.Context, uuid.UUID) (*GetUserProfileResult, error)
 	Create(context.Context, CreateUserInput) error
 	DeactivateUser(context.Context, uuid.UUID) error
 	ActivateUser(context.Context, uuid.UUID) error
@@ -40,15 +41,15 @@ func NewService(userRepository userrepository.Repository, roleRepository rolerep
 	}
 }
 
-func (s *service) GetAll(ctx context.Context) ([]GetUserResult, error) {
+func (s *service) GetAll(ctx context.Context) ([]GetUserInfoResult, error) {
 	users, err := s.userRepository.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []GetUserResult
+	var result []GetUserInfoResult
 	for _, user := range users {
-		result = append(result, GetUserResult{
+		result = append(result, GetUserInfoResult{
 			ID:          user.ID,
 			UUID:        user.UUID,
 			UserName:    user.UserName,
@@ -67,9 +68,9 @@ func (s *service) GetUserDetail(ctx context.Context, uuid uuid.UUID) (*GetUserDe
 		return nil, err
 	}
 
-	var employee *EmployeeInfo
+	var employee *GetEmployeeInfoResult
 	if user.Employee != nil {
-		employee = &EmployeeInfo{
+		employee = &GetEmployeeInfoResult{
 			ID:                  user.Employee.ID,
 			UUID:                user.Employee.UUID,
 			OfficeName:          user.Employee.Office.Name,
@@ -79,7 +80,7 @@ func (s *service) GetUserDetail(ctx context.Context, uuid uuid.UUID) (*GetUserDe
 	}
 
 	return &GetUserDetailResult{
-		User: GetUserResult{
+		User: GetUserInfoResult{
 			ID:          user.ID,
 			UUID:        user.UUID,
 			UserName:    user.UserName,
@@ -88,6 +89,30 @@ func (s *service) GetUserDetail(ctx context.Context, uuid uuid.UUID) (*GetUserDe
 			LastLoginAt: user.LastLoginAt,
 			RoleName:    user.Role.Name,
 		},
+		Employee: employee,
+	}, nil
+}
+
+func (s *service) GetProfile(ctx context.Context, userUUID uuid.UUID) (*GetUserProfileResult, error) {
+	user, err := s.userRepository.FindByUUID(ctx, userUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	var employee *GetEmployeeProfileResult
+	if user.Employee != nil {
+		employee = &GetEmployeeProfileResult{
+			OfficeName:          user.Employee.Office.Name,
+			FullName:            fmt.Sprintf("%s %s", user.Employee.FamilyName, user.Employee.GivenName),
+			FullNameKana:        fmt.Sprintf("%s %s", *user.Employee.FamilyNameKana, *user.Employee.GivenNameKana),
+			EmploymentStartDate: user.Employee.EmploymentStartDate,
+		}
+	}
+
+	return &GetUserProfileResult{
+		UserName: user.UserName,
+		Email:    user.Email,
+		RoleName: user.Role.Name,
 		Employee: employee,
 	}, nil
 }

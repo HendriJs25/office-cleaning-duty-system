@@ -69,11 +69,11 @@ func (h *Handler) Login(c *gin.Context) {
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code: http.StatusOK,
 		Data: responsedto.LoginResponse{
-			User: &responsedto.UserResponse{
+			User: &responsedto.UserInfoResponse{
 				ID:       result.User.ID,
 				UUID:     result.User.UUID,
 				Email:    result.User.Email,
-				Username: result.User.UserName,
+				UserName: result.User.UserName,
 				RoleName: result.User.RoleName,
 			},
 		},
