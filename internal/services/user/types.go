@@ -31,7 +31,7 @@ type GetUserDetailResult struct {
 type GetEmployeeProfileResult struct {
 	OfficeName          string
 	FullName            string
-	FullNameKana        string
+	FullNameKana        *string
 	EmploymentStartDate *time.Time
 }
 

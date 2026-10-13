@@ -32,7 +32,7 @@ type UserDetailResponse struct {
 type EmployeeProfileResponse struct {
 	OfficeName          string     `json:"office_name"`
 	FullName            string     `json:"full_name"`
-	FullNameKana        string     `json:"full_name_kana"`
+	FullNameKana        *string    `json:"full_name_kana"`
 	EmploymentStartDate *time.Time `json:"employment_start_date,omitempty"`
 }
 
