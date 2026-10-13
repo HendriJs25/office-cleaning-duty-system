@@ -11,4 +11,5 @@ import (
 func Register(router *gin.RouterGroup, handler *employeehandler.Handler, authorization *middleware.Authorization) {
 	router.POST("/employees", authorization.RequirePermission(constants.PermissionEmployeeCreate), handler.Create)
 	router.GET("/employees/options", authorization.RequirePermission(constants.PermissionEmployeeRead), handler.GetAllAssignableEmployees)
+	router.PATCH("/employees/:uuid", authorization.RequirePermission(constants.PermissionEmployeeUpdate), handler.UpdateEmployeeByAdmin)
 }

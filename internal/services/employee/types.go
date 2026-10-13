@@ -16,3 +16,14 @@ type GetAssignableEmployeesResult struct {
 	ID       int64
 	FullName string
 }
+
+type UpdateEmployeeByAdminInput struct {
+	OfficeID            int64
+	FamilyName          string
+	GivenName           string
+	FamilyNameKana      *string
+	GivenNameKana       *string
+	IsActive            bool
+	EmploymentStartDate *time.Time
+	EmploymentEndDate   *time.Time
+}
