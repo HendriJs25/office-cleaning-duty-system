@@ -19,6 +19,7 @@ type service struct {
 type Service interface {
 	Create(context.Context, CreateEmployeeInput) error
 	GetAllAssignableEmployees(context.Context, *uuid.UUID) ([]GetAssignableEmployeesResult, error)
+	UpdateEmployeeByAdmin(context.Context, uuid.UUID, UpdateEmployeeByAdminInput) error
 }
 
 func NewService(employeeRepository employeerepository.Repository, officeRepository officerepository.Repository) Service {
@@ -77,4 +78,32 @@ func (s *service) GetAllAssignableEmployees(ctx context.Context, userUUID *uuid.
 		})
 	}
 	return result, nil
+}
+
+func (s *service) UpdateEmployeeByAdmin(ctx context.Context, employeeUUID uuid.UUID, input UpdateEmployeeByAdminInput) error {
+	office, err := s.officeRepository.GetByID(ctx, input.OfficeID)
+	if err != nil {
+		return err
+	}
+
+	if !office.IsActive {
+		return errConstant.ErrInActive
+	}
+
+	updates := map[string]any{
+		"office_id":             input.OfficeID,
+		"family_name":           input.FamilyName,
+		"given_name":            input.GivenName,
+		"family_name_kana":      input.FamilyNameKana,
+		"given_name_kana":       input.GivenNameKana,
+		"is_active":             input.IsActive,
+		"employment_start_date": input.EmploymentStartDate,
+		"employment_end_date":   input.EmploymentEndDate,
+	}
+
+	err = s.employeeRepository.UpdateByUUID(ctx, employeeUUID, updates)
+	if err != nil {
+		return err
+	}
+	return nil
 }

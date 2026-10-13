@@ -111,3 +111,60 @@ func (h *Handler) GetAllAssignableEmployees(c *gin.Context) {
 		Gin:  c,
 	})
 }
+
+func (h *Handler) UpdateEmployeeByAdmin(c *gin.Context) {
+	uuidStr := c.Param("uuid")
+
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	var req request.UpdateEmployeeByAdminRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	err = h.employeeService.UpdateEmployeeByAdmin(c.Request.Context(), parsedUUID, employeeservice.UpdateEmployeeByAdminInput{
+		OfficeID:            req.OfficeID,
+		FamilyName:          req.FamilyName,
+		GivenName:           req.GivenName,
+		FamilyNameKana:      req.FamilyNameKana,
+		GivenNameKana:       req.GivenNameKana,
+		IsActive:            *req.IsActive,
+		EmploymentStartDate: req.EmploymentStartDate.TimePtr(),
+		EmploymentEndDate:   req.EmploymentEndDate.TimePtr(),
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.InvalidOption(c, err, "オフィス")
+			return
+		case errors.Is(err, errConstant.ErrInActive):
+			response.InactiveOption(c, err, "オフィス")
+			return
+		case errors.Is(err, errConstant.ErrEmployeeNotFound):
+			response.InvalidOption(c, err, "従業員")
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithError(err).WithField("employee_uuid", parsedUUID).Error("Update employee by admin failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "従業員情報を更新しました",
+		Gin:     c,
+	})
+}

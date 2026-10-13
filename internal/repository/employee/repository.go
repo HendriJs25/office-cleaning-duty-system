@@ -20,6 +20,7 @@ type Repository interface {
 	FindAllActive(context.Context) ([]model.Employee, error)
 	FindByID(context.Context, *int64) (*model.Employee, error)
 	FindAssignableEmployees(context.Context, *uuid.UUID) ([]model.Employee, error)
+	UpdateByUUID(context.Context, uuid.UUID, map[string]any) error
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -71,4 +72,18 @@ func (r *repository) FindAssignableEmployees(ctx context.Context, userUUID *uuid
 		return nil, fmt.Errorf("find all assignable employees: %w", err)
 	}
 	return employees, nil
+}
+
+func (r *repository) UpdateByUUID(ctx context.Context, employeeUUID uuid.UUID, fields map[string]any) error {
+	result := r.db.WithContext(ctx).Model(model.Employee{}).Where("uuid = ?", employeeUUID).Updates(fields)
+
+	if result.Error != nil {
+		return fmt.Errorf("update employee by uuid: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return errConstant.ErrEmployeeNotFound
+	}
+
+	return nil
 }
