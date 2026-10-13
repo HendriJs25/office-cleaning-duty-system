@@ -2,6 +2,7 @@ package user
 
 import (
 	"cleaning/internal/common/email"
+	"cleaning/internal/common/name"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
 	employeerepository "cleaning/internal/repository/employee"
@@ -103,8 +104,8 @@ func (s *service) GetProfile(ctx context.Context, userUUID uuid.UUID) (*GetUserP
 	if user.Employee != nil {
 		employee = &GetEmployeeProfileResult{
 			OfficeName:          user.Employee.Office.Name,
-			FullName:            fmt.Sprintf("%s %s", user.Employee.FamilyName, user.Employee.GivenName),
-			FullNameKana:        fmt.Sprintf("%s %s", *user.Employee.FamilyNameKana, *user.Employee.GivenNameKana),
+			FullName:            name.BuildFullName(user.Employee.FamilyName, user.Employee.GivenName),
+			FullNameKana:        name.BuildFullNameKana(user.Employee.FamilyNameKana, user.Employee.GivenNameKana),
 			EmploymentStartDate: user.Employee.EmploymentStartDate,
 		}
 	}
