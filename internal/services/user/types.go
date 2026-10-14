@@ -60,3 +60,8 @@ type UpdateProfileInput struct {
 	UserName string
 	Email    string
 }
+
+type UpdatePasswordInput struct {
+	CurrentPassword string
+	NewPassword     string
+}

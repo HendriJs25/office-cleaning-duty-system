@@ -378,3 +378,50 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		Gin:     c,
 	})
 }
+
+func (h *Handler) UpdatePassword(c *gin.Context) {
+	identity, ok := middleware.RequireIdentity(c)
+	if !ok {
+		return
+	}
+
+	var req request.UpdatePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	err := h.UserService.UpdatePassword(c.Request.Context(), identity.UUID, userservice.UpdatePasswordInput{
+		CurrentPassword: req.CurrentPassword,
+		NewPassword:     req.NewPassword,
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.NotFound(c)
+			return
+		case errors.Is(err, errConstant.ErrPasswordIncorrect):
+			response.UnprocessableEntity(c, err)
+			return
+		case errors.Is(err, errConstant.ErrPasswordIsSame):
+			response.UnprocessableEntity(c, err)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("user_uuid", identity.UUID).WithError(err).Error("failed to update password")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "パスワードを更新しました",
+		Gin:     c,
+	})
+}

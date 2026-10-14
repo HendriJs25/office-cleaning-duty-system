@@ -24,3 +24,9 @@ type UpdateProfileRequest struct {
 	UserName string `json:"user_name" validate:"required,notblank,max=200"`
 	Email    string `json:"email" validate:"required,email"`
 }
+
+type UpdatePasswordRequest struct {
+	CurrentPassword    string `json:"current_password" validate:"required"`
+	NewPassword        string `json:"new_password" validate:"required,validpassword"`
+	NewPasswordConfirm string `json:"new_password_confirm" validate:"required,eqfield=NewPassword"`
+}

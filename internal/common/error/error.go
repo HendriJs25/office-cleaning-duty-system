@@ -44,6 +44,9 @@ var FieldNameJa = map[string]string{
 	"EmploymentEndDate":   "勤務終了日",
 	"RoleID":              "ロール",
 	"IsActive":            "アカウント状態",
+	"CurrentPassword":     "現在のパスワード",
+	"NewPassword":         "新しいパスワード",
+	"NewPasswordConfirm":  "新しいパスワード（確認用）",
 }
 
 func ErrValidationResponse(err error) (validationResponse []ValidationResponse) {

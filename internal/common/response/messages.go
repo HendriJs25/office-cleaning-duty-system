@@ -19,6 +19,10 @@ func messageJa(err error) string {
 		return "この従業員は既にユーザーに登録されています"
 	case errors.Is(err, errConstant.ErrCannotUpdateSelf):
 		return "自分自身のユーザー情報は変更できません"
+	case errors.Is(err, errConstant.ErrPasswordIncorrect):
+		return "現在のパスワードが正しくありません"
+	case errors.Is(err, errConstant.ErrPasswordIsSame):
+		return "新しいパスワードは現在のパスワードと異なるものを設定してください"
 	case errors.Is(err, errConstant.ErrUnauthorized):
 		return "認証が必要です"
 	case errors.Is(err, errConstant.ErrForbidden):
