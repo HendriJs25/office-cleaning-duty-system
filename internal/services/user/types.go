@@ -55,3 +55,8 @@ type UpdateUserByAdminInput struct {
 	EmployeeID *int64
 	IsActive   bool
 }
+
+type UpdateProfileInput struct {
+	UserName string
+	Email    string
+}
