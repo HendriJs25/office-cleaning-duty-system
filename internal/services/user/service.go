@@ -31,6 +31,7 @@ type Service interface {
 	DeactivateUser(context.Context, uuid.UUID) error
 	ActivateUser(context.Context, uuid.UUID) error
 	UpdateUserByAdmin(context.Context, uuid.UUID, uuid.UUID, UpdateUserByAdminInput) error
+	UpdateProfile(context.Context, uuid.UUID, UpdateProfileInput) error
 }
 
 func NewService(userRepository userrepository.Repository, roleRepository rolerepository.Repository, employeeRepository employeerepository.Repository, sessionRepository sessionrepository.Repository) Service {
@@ -255,5 +256,18 @@ func (s *service) UpdateUserByAdmin(ctx context.Context, actorUUID uuid.UUID, ta
 		}
 	}
 
+	return nil
+}
+
+func (s *service) UpdateProfile(ctx context.Context, userUUID uuid.UUID, updateInput UpdateProfileInput) error {
+	fields := map[string]any{
+		"user_name": updateInput.UserName,
+		"email":     updateInput.Email,
+	}
+
+	err := s.userRepository.UpdateByUUID(ctx, userUUID, fields)
+	if err != nil {
+		return err
+	}
 	return nil
 }

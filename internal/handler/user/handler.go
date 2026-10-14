@@ -336,3 +336,45 @@ func (h *Handler) UpdateUserByAdmin(c *gin.Context) {
 		Gin:     c,
 	})
 }
+
+func (h *Handler) UpdateProfile(c *gin.Context) {
+	identity, ok := middleware.RequireIdentity(c)
+	if !ok {
+		return
+	}
+
+	var req request.UpdateProfileRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	err := h.UserService.UpdateProfile(c.Request.Context(), identity.UUID, userservice.UpdateProfileInput{
+		UserName: req.UserName,
+		Email:    req.Email,
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.NotFound(c)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("user_uuid", identity.UUID).WithError(err).Error("failed to update profile")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "プロフィールを更新しました",
+		Gin:     c,
+	})
+}

@@ -19,3 +19,8 @@ type UpdateUserByAdminRequest struct {
 	EmployeeID *int64 `json:"employee_id"`
 	IsActive   *bool  `json:"is_active" validate:"required"`
 }
+
+type UpdateProfileRequest struct {
+	UserName string `json:"user_name" validate:"required,notblank,max=200"`
+	Email    string `json:"email" validate:"required,email"`
+}
