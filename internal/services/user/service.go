@@ -10,6 +10,7 @@ import (
 	sessionrepository "cleaning/internal/repository/session"
 	userrepository "cleaning/internal/repository/user"
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -32,6 +33,7 @@ type Service interface {
 	ActivateUser(context.Context, uuid.UUID) error
 	UpdateUserByAdmin(context.Context, uuid.UUID, uuid.UUID, UpdateUserByAdminInput) error
 	UpdateProfile(context.Context, uuid.UUID, UpdateProfileInput) error
+	UpdatePassword(context.Context, uuid.UUID, UpdatePasswordInput) error
 }
 
 func NewService(userRepository userrepository.Repository, roleRepository rolerepository.Repository, employeeRepository employeerepository.Repository, sessionRepository sessionrepository.Repository) Service {
@@ -266,6 +268,41 @@ func (s *service) UpdateProfile(ctx context.Context, userUUID uuid.UUID, updateI
 	}
 
 	err := s.userRepository.UpdateByUUID(ctx, userUUID, fields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *service) UpdatePassword(ctx context.Context, userUUID uuid.UUID, updateInput UpdatePasswordInput) error {
+	user, err := s.userRepository.FindByUUID(ctx, userUUID)
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(updateInput.CurrentPassword)); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return errConstant.ErrPasswordIncorrect
+		}
+
+		return fmt.Errorf("verify current password: %w", err)
+	}
+
+	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(updateInput.NewPassword)) == nil {
+		return errConstant.ErrPasswordIsSame
+	}
+
+	hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(updateInput.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("hash password: %w", err)
+	}
+
+	err = s.sessionRepository.DeleteByUserUUID(ctx, userUUID)
+	if err != nil {
+		return err
+	}
+
+	err = s.userRepository.UpdatePassword(ctx, userUUID, string(hashedNewPassword))
 	if err != nil {
 		return err
 	}

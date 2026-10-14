@@ -66,6 +66,14 @@ func Conflict(c *gin.Context, err error) {
 	})
 }
 
+func UnprocessableEntity(c *gin.Context, err error) {
+	HTTPResponse(ParamHTTPResponse{
+		Code: http.StatusUnprocessableEntity,
+		Err:  err,
+		Gin:  c,
+	})
+}
+
 func Empty(c *gin.Context, resource string) {
 	HTTPResponse(ParamHTTPResponse{
 		Code:    http.StatusOK,

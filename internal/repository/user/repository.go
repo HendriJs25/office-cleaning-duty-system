@@ -25,6 +25,7 @@ type Repository interface {
 	UpdateByUUID(context.Context, uuid.UUID, map[string]any) error
 	UpdateLastLoginAt(context.Context, uuid.UUID) error
 	UpdateStatus(context.Context, uuid.UUID, bool) error
+	UpdatePassword(context.Context, uuid.UUID, string) error
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -107,6 +108,18 @@ func (r *repository) UpdateStatus(ctx context.Context, userUUID uuid.UUID, statu
 	err := r.db.WithContext(ctx).Model(&model.User{}).Where("uuid = ?", userUUID).Update("is_active", status).Error
 	if err != nil {
 		return fmt.Errorf("update status: %w", err)
+	}
+	return nil
+}
+
+func (r *repository) UpdatePassword(ctx context.Context, userUUID uuid.UUID, password string) error {
+	result := r.db.WithContext(ctx).Model(&model.User{}).Where("uuid = ?", userUUID).Update("password_hash", password)
+	if result.Error != nil {
+		return fmt.Errorf("update password: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return errConstant.ErrNotFound
 	}
 	return nil
 }
