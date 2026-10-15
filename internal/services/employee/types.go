@@ -30,8 +30,20 @@ type GetEmployeeResult struct {
 	EmploymentStartDate *time.Time
 }
 
-type InvitationToken struct {
-	Token     string
+type GetEmployeeDetailsResult struct {
+	ID                  int64
+	UUID                uuid.UUID
+	OfficeName          string
+	FullName            string
+	FullNameKana        *string
+	IsActive            bool
+	EmploymentStartDate *time.Time
+	EmploymentEndDate   *time.Time
+	Token               *Token
+}
+
+type Token struct {
+	TokenType string
 	ExpiresAt time.Time
 }
 

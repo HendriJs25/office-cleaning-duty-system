@@ -1,8 +1,10 @@
 package verificationtoken
 
 import (
+	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
 	"context"
+	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -14,6 +16,7 @@ type repository struct {
 
 type Repository interface {
 	Create(context.Context, *model.VerificationToken) error
+	FindByEmployeeIDAndTokenType(context.Context, int64, string) (*model.VerificationToken, error)
 	DeleteByEmployeeIDAndTokenType(context.Context, int64, string) error
 }
 
@@ -29,6 +32,18 @@ func (r *repository) Create(ctx context.Context, token *model.VerificationToken)
 		return fmt.Errorf("create token: %w", err)
 	}
 	return nil
+}
+
+func (r *repository) FindByEmployeeIDAndTokenType(ctx context.Context, employeeID int64, tokenType string) (*model.VerificationToken, error) {
+	var token model.VerificationToken
+	err := r.db.WithContext(ctx).Where("employee_id = ? AND token_type = ?", employeeID, tokenType).First(&token).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("find token by employee id: %w", err)
+	}
+	return &token, nil
 }
 
 func (r *repository) DeleteByEmployeeIDAndTokenType(ctx context.Context, employeeID int64, tokenType string) error {
