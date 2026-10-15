@@ -14,9 +14,6 @@ var (
 	ErrInActive            = errors.New("inactive")
 	ErrAlreadyDeactivated  = errors.New("already deactivated")
 	ErrAlreadyActivated    = errors.New("already activated")
-
-	ErrInvalidToken = errors.New("invalid token")
-	ErrTokenExpired = errors.New("token is expired")
 )
 
 var GeneralErrors = []error{
@@ -30,7 +27,6 @@ var GeneralErrors = []error{
 	ErrAlreadyExists,
 	ErrInActive,
 	ErrInvalidToken,
-	ErrTokenExpired,
 	ErrAlreadyDeactivated,
 	ErrAlreadyActivated,
 }

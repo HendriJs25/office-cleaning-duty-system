@@ -63,7 +63,7 @@ func (r *repository) FindAllActive(ctx context.Context) ([]model.Employee, error
 
 func (r *repository) FindByID(ctx context.Context, id *int64) (*model.Employee, error) {
 	var employee model.Employee
-	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&employee).Error
+	err := r.db.WithContext(ctx).Joins("Office").Where("employees.id = ?", id).Take(&employee).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errConstant.ErrEmployeeNotFound

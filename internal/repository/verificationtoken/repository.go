@@ -17,6 +17,7 @@ type repository struct {
 type Repository interface {
 	Create(context.Context, *model.VerificationToken) error
 	FindByEmployeeIDAndTokenType(context.Context, int64, string) (*model.VerificationToken, error)
+	FindByTokenHashAndTokenType(context.Context, string, string) (*model.VerificationToken, error)
 	DeleteByEmployeeIDAndTokenType(context.Context, int64, string) error
 }
 
@@ -42,6 +43,18 @@ func (r *repository) FindByEmployeeIDAndTokenType(ctx context.Context, employeeI
 			return nil, errConstant.ErrNotFound
 		}
 		return nil, fmt.Errorf("find token by employee id: %w", err)
+	}
+	return &token, nil
+}
+
+func (r *repository) FindByTokenHashAndTokenType(ctx context.Context, tokenHash string, tokenType string) (*model.VerificationToken, error) {
+	var token model.VerificationToken
+	err := r.db.WithContext(ctx).Where("hash_token = ? AND token_type = ?", tokenHash, tokenType).Take(&token).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("find token by token hash: %w", err)
 	}
 	return &token, nil
 }
