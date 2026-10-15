@@ -1,6 +1,10 @@
 package employee
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type CreateEmployeeInput struct {
 	OfficeID            int64
@@ -15,6 +19,20 @@ type CreateEmployeeInput struct {
 type GetAssignableEmployeesResult struct {
 	ID       int64
 	FullName string
+}
+
+type GetEmployeeResult struct {
+	ID                  int64
+	UUID                uuid.UUID
+	OfficeName          string
+	FullName            string
+	IsActive            bool
+	EmploymentStartDate *time.Time
+}
+
+type InvitationToken struct {
+	Token     string
+	ExpiresAt time.Time
 }
 
 type UpdateEmployeeByAdminInput struct {

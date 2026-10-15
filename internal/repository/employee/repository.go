@@ -18,6 +18,7 @@ type repository struct {
 
 type Repository interface {
 	Create(context.Context, *model.Employee) error
+	FindAll(context.Context) ([]model.Employee, error)
 	FindAllActive(context.Context) ([]model.Employee, error)
 	FindByID(context.Context, *int64) (*model.Employee, error)
 	FindByUUIDForUpdate(context.Context, uuid.UUID) (*model.Employee, error)
@@ -38,6 +39,16 @@ func (r *repository) Create(ctx context.Context, employee *model.Employee) error
 		return fmt.Errorf("create employee: %w", err)
 	}
 	return nil
+}
+
+func (r *repository) FindAll(ctx context.Context) ([]model.Employee, error) {
+	var employees []model.Employee
+
+	err := r.db.WithContext(ctx).Joins("Office").Order("id ASC").Find(&employees).Error
+	if err != nil {
+		return nil, fmt.Errorf("find all employees: %w", err)
+	}
+	return employees, nil
 }
 
 func (r *repository) FindAllActive(ctx context.Context) ([]model.Employee, error) {
