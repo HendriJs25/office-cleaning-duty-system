@@ -1,6 +1,7 @@
 package employee
 
 import (
+	"cleaning/internal/common/name"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
 	employeerepository "cleaning/internal/repository/employee"
@@ -18,6 +19,7 @@ type service struct {
 
 type Service interface {
 	Create(context.Context, CreateEmployeeInput) error
+	GetAllEmployees(context.Context) ([]GetEmployeeResult, error)
 	GetAllAssignableEmployees(context.Context, *uuid.UUID) ([]GetAssignableEmployeesResult, error)
 	UpdateEmployeeByAdmin(context.Context, uuid.UUID, UpdateEmployeeByAdminInput) error
 }
@@ -56,6 +58,31 @@ func (s *service) Create(ctx context.Context, input CreateEmployeeInput) error {
 	}
 
 	return nil
+}
+
+func (s *service) GetAllEmployees(ctx context.Context) ([]GetEmployeeResult, error) {
+	employees, err := s.employeeRepository.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(employees) == 0 {
+		return []GetEmployeeResult{}, nil
+	}
+
+	var result []GetEmployeeResult
+	for _, employee := range employees {
+		result = append(result, GetEmployeeResult{
+			ID:                  employee.ID,
+			UUID:                employee.UUID,
+			OfficeName:          employee.Office.Name,
+			FullName:            name.BuildFullName(employee.FamilyName, employee.GivenName),
+			IsActive:            employee.IsActive,
+			EmploymentStartDate: employee.EmploymentStartDate,
+		})
+	}
+
+	return result, nil
 }
 
 func (s *service) GetAllAssignableEmployees(ctx context.Context, userUUID *uuid.UUID) ([]GetAssignableEmployeesResult, error) {

@@ -72,6 +72,38 @@ func (h *Handler) Create(c *gin.Context) {
 	})
 }
 
+func (h *Handler) GetAll(c *gin.Context) {
+	employees, err := h.employeeService.GetAllEmployees(c.Request.Context())
+	if err != nil {
+		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all employee failed")
+		response.InternalServerError(c)
+		return
+	}
+
+	if len(employees) == 0 {
+		response.Empty(c, "従業員")
+		return
+	}
+
+	var result []responsedto.GetEmployeesResponse
+	for _, employee := range employees {
+		result = append(result, responsedto.GetEmployeesResponse{
+			ID:                  employee.ID,
+			UUID:                employee.UUID,
+			OfficeName:          employee.OfficeName,
+			FullName:            employee.FullName,
+			IsActive:            employee.IsActive,
+			EmploymentStartDate: employee.EmploymentStartDate,
+		})
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code: http.StatusOK,
+		Data: result,
+		Gin:  c,
+	})
+}
+
 func (h *Handler) GetAllAssignableEmployees(c *gin.Context) {
 	var userUUID *uuid.UUID
 
