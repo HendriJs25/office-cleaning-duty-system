@@ -144,6 +144,35 @@ func (h *Handler) GetAllAssignableEmployees(c *gin.Context) {
 	})
 }
 
+func (h *Handler) GetDetailEmployee(c *gin.Context) {
+	uuidStr := c.Param("uuid")
+
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	employee, err := h.employeeService.GetEmployeeDetail(c.Request.Context(), parsedUUID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrEmployeeNotFound):
+			response.NotFound(c)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("employee_uuid", parsedUUID).WithError(err).Error("Get employee detail failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code: http.StatusOK,
+		Data: employee,
+		Gin:  c,
+	})
+}
+
 func (h *Handler) UpdateEmployeeByAdmin(c *gin.Context) {
 	uuidStr := c.Param("uuid")
 
