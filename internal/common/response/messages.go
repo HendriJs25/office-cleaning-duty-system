@@ -23,6 +23,8 @@ func messageJa(err error) string {
 		return "現在のパスワードが正しくありません"
 	case errors.Is(err, errConstant.ErrPasswordIsSame):
 		return "新しいパスワードは現在のパスワードと異なるものを設定してください"
+	case errors.Is(err, errConstant.ErrEmployeeInActive):
+		return "従業員は無効化されているため、操作を実行できません"
 	case errors.Is(err, errConstant.ErrUnauthorized):
 		return "認証が必要です"
 	case errors.Is(err, errConstant.ErrForbidden):

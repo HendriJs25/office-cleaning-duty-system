@@ -66,7 +66,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	response.HTTPResponse(response.ParamHTTPResponse{
-		Code:    http.StatusOK,
+		Code:    http.StatusCreated,
 		Message: "従業員を登録しました。",
 		Gin:     c,
 	})

@@ -201,7 +201,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	response.HTTPResponse(response.ParamHTTPResponse{
-		Code:    http.StatusOK,
+		Code:    http.StatusCreated,
 		Message: "ユーザーを作成しました。",
 		Gin:     c,
 	})
@@ -364,6 +364,9 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		switch {
 		case errors.Is(err, errConstant.ErrNotFound):
 			response.NotFound(c)
+			return
+		case errors.Is(err, errConstant.ErrAlreadyExists):
+			response.ConflictDuplicate(c, err, "メールアドレス")
 			return
 		default:
 			logger.WithContext(c.Request.Context()).WithField("user_uuid", identity.UUID).WithError(err).Error("failed to update profile")

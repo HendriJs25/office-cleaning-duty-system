@@ -262,12 +262,21 @@ func (s *service) UpdateUserByAdmin(ctx context.Context, actorUUID uuid.UUID, ta
 }
 
 func (s *service) UpdateProfile(ctx context.Context, userUUID uuid.UUID, updateInput UpdateProfileInput) error {
+	exist, err := s.userRepository.ExistByEmail(ctx, updateInput.Email)
+	if err != nil {
+		return err
+	}
+
+	if exist {
+		return errConstant.ErrAlreadyExists
+	}
+
 	fields := map[string]any{
 		"user_name": updateInput.UserName,
 		"email":     updateInput.Email,
 	}
 
-	err := s.userRepository.UpdateByUUID(ctx, userUUID, fields)
+	err = s.userRepository.UpdateByUUID(ctx, userUUID, fields)
 	if err != nil {
 		return err
 	}

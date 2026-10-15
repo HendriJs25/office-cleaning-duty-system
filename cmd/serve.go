@@ -98,6 +98,8 @@ func runServer() error {
 	})
 
 	group := router.Group("/api/v1")
+	// use cache-control : no-store just for credential/data internal response, in this case no-store used in global cause this app all data is company data
+	group.Use(middleware.NoStore())
 	routerRegistry := routes.NewRegistry(group, handlerRegistry, authenticationMiddleware, authorizationMiddleware)
 	routerRegistry.Register()
 

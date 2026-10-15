@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type repository struct {
@@ -19,8 +20,10 @@ type Repository interface {
 	Create(context.Context, *model.Employee) error
 	FindAllActive(context.Context) ([]model.Employee, error)
 	FindByID(context.Context, *int64) (*model.Employee, error)
+	FindByUUIDForUpdate(context.Context, uuid.UUID) (*model.Employee, error)
 	FindAssignableEmployees(context.Context, *uuid.UUID) ([]model.Employee, error)
 	UpdateByUUID(context.Context, uuid.UUID, map[string]any) error
+	IsAssignable(context.Context, uuid.UUID) (bool, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -58,6 +61,19 @@ func (r *repository) FindByID(ctx context.Context, id *int64) (*model.Employee, 
 	return &employee, nil
 }
 
+func (r *repository) FindByUUIDForUpdate(ctx context.Context, employeeUUID uuid.UUID) (*model.Employee, error) {
+	var employee model.Employee
+
+	err := r.db.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).Where("uuid = ?", employeeUUID).Take(&employee).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("find employee by uuid: %w", err)
+	}
+	return &employee, nil
+}
+
 func (r *repository) FindAssignableEmployees(ctx context.Context, userUUID *uuid.UUID) ([]model.Employee, error) {
 	var employees []model.Employee
 
@@ -86,4 +102,16 @@ func (r *repository) UpdateByUUID(ctx context.Context, employeeUUID uuid.UUID, f
 	}
 
 	return nil
+}
+
+func (r *repository) IsAssignable(ctx context.Context, employeeUUID uuid.UUID) (bool, error) {
+	var count int64
+
+	err := r.db.WithContext(ctx).Model(model.Employee{}).Where("employees.uuid = ?", employeeUUID).
+		Where(`NOT EXISTS (SELECT 1 FROM users WHERE users.employee_id = employees.id)`).
+		Count(&count).Error
+	if err != nil {
+		return false, fmt.Errorf("is assignable employee: %w", err)
+	}
+	return count > 0, nil
 }
