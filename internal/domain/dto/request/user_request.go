@@ -1,10 +1,5 @@
 package request
 
-type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
-}
-
 type CreateUserRequest struct {
 	RoleID          int64  `json:"role_id" validate:"required"`
 	EmployeeID      *int64 `json:"employee_id,omitempty"`

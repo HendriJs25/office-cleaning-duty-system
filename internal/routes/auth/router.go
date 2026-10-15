@@ -30,6 +30,7 @@ func Register(router *gin.RouterGroup,
 
 	auth.POST("/login", authHandler.Login)
 	auth.POST("/logout", authentication.Handle(), authHandler.Logout)
+	auth.POST("/registration-tokens/verify", verificationTokenHandler.VerifyRegistrationToken)
 
 	authenticated := router.Group("")
 	authenticated.Use(authentication.Handle())

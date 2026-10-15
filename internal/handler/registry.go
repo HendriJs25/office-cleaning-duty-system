@@ -31,6 +31,6 @@ func NewRegistry(services *services.Registry, validate *customValidator.Validate
 		User:              userhandler.NewHandler(services.UserService, validate),
 		Office:            officehandler.NewHandler(services.OfficeService, validate),
 		Employee:          employeehandler.NewHandler(services.EmployeeService, validate),
-		VerificationToken: verificationtokenhandler.NewHandler(services.VerificationTokenService),
+		VerificationToken: verificationtokenhandler.NewHandler(services.VerificationTokenService, validate),
 	}
 }

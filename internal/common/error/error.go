@@ -47,6 +47,7 @@ var FieldNameJa = map[string]string{
 	"CurrentPassword":     "現在のパスワード",
 	"NewPassword":         "新しいパスワード",
 	"NewPasswordConfirm":  "新しいパスワード（確認用）",
+	"Token":               "トークン",
 }
 
 func ErrValidationResponse(err error) (validationResponse []ValidationResponse) {
