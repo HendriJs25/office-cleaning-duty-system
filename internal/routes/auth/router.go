@@ -6,6 +6,7 @@ import (
 	officehandler "cleaning/internal/handler/office"
 	rolehandler "cleaning/internal/handler/role"
 	userhandler "cleaning/internal/handler/user"
+	verificationtokenhandler "cleaning/internal/handler/verificationtoken"
 	"cleaning/internal/middleware"
 	"cleaning/internal/routes/employee"
 	officeroutes "cleaning/internal/routes/office"
@@ -21,18 +22,20 @@ func Register(router *gin.RouterGroup,
 	userHandler *userhandler.Handler,
 	officeHandler *officehandler.Handler,
 	employeeHandler *employeehandler.Handler,
+	verificationTokenHandler *verificationtokenhandler.Handler,
 	authentication *middleware.Authentication,
 	authorization *middleware.Authorization) {
 
-	router.POST("/login", authHandler.Login)
+	auth := router.Group("/auth")
 
-	authenticated := router.Group("/auth")
+	auth.POST("/login", authHandler.Login)
+	auth.POST("/logout", authentication.Handle(), authHandler.Logout)
+
+	authenticated := router.Group("")
 	authenticated.Use(authentication.Handle())
-
-	authenticated.POST("/logout", authHandler.Logout)
 
 	roleroutes.Register(authenticated, roleHandler, authorization)
 	userroutes.Register(authenticated, userHandler, authorization)
 	officeroutes.Register(authenticated, officeHandler, authorization)
-	employee.Register(authenticated, employeeHandler, authorization)
+	employee.Register(authenticated, employeeHandler, verificationTokenHandler, authorization)
 }

@@ -12,28 +12,31 @@ import (
 	permissionservice "cleaning/internal/services/permission"
 	roleservice "cleaning/internal/services/role"
 	userservice "cleaning/internal/services/user"
+	verificationtokenservice "cleaning/internal/services/verificationtoken"
 )
 
 type Registry struct {
-	AuthService       authservice.Service
-	JWTService        jwtservice.Service
-	RoleService       roleservice.Service
-	PermissionService permissionservice.Service
-	UserService       userservice.Service
-	OfficeService     officeservice.Service
-	EmployeeService   employeeservice.Service
+	AuthService              authservice.Service
+	JWTService               jwtservice.Service
+	RoleService              roleservice.Service
+	PermissionService        permissionservice.Service
+	UserService              userservice.Service
+	OfficeService            officeservice.Service
+	EmployeeService          employeeservice.Service
+	VerificationTokenService verificationtokenservice.Service
 }
 
 func NewRegistry(repositories *repository.Registry, sessionRepository sessionrepository.Repository, permissionCacheRepository permissioncacherepository.Repository, jwtConfig *config.JWT) *Registry {
 	jwtService := jwtservice.NewService(jwtConfig)
 
 	return &Registry{
-		AuthService:       authservice.NewService(repositories.User, sessionRepository, jwtService),
-		JWTService:        jwtService,
-		RoleService:       roleservice.NewService(repositories.Role),
-		PermissionService: permissionservice.NewService(repositories.Permission, permissionCacheRepository),
-		UserService:       userservice.NewService(repositories.User, repositories.Role, repositories.Employee, sessionRepository),
-		OfficeService:     officeservice.NewService(repositories.Office),
-		EmployeeService:   employeeservice.NewService(repositories.Employee, repositories.Office),
+		AuthService:              authservice.NewService(repositories.User, sessionRepository, jwtService),
+		JWTService:               jwtService,
+		RoleService:              roleservice.NewService(repositories.Role),
+		PermissionService:        permissionservice.NewService(repositories.Permission, permissionCacheRepository),
+		UserService:              userservice.NewService(repositories.User, repositories.Role, repositories.Employee, sessionRepository),
+		OfficeService:            officeservice.NewService(repositories.Office),
+		EmployeeService:          employeeservice.NewService(repositories.Employee, repositories.Office),
+		VerificationTokenService: verificationtokenservice.NewService(repositories.Transaction),
 	}
 }

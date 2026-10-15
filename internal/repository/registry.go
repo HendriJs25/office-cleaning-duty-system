@@ -18,6 +18,7 @@ type Registry struct {
 	Office            officerepository.Repository
 	Employee          employeerepository.Repository
 	VerificationToken verificationtokenrepository.Repository
+	Transaction       TransactionManager
 }
 
 func NewRegistry(db *gorm.DB) *Registry {
@@ -28,5 +29,6 @@ func NewRegistry(db *gorm.DB) *Registry {
 		Office:            officerepository.NewRepository(db),
 		Employee:          employeerepository.NewRepository(db),
 		VerificationToken: verificationtokenrepository.NewRepository(db),
+		Transaction:       NewTransactionManager(db),
 	}
 }

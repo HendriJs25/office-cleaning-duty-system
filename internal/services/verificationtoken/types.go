@@ -3,6 +3,6 @@ package verificationtoken
 import "time"
 
 type CreateRegistrationTokenResult struct {
-	rawToken  string
+	RawToken  string
 	ExpiresAt time.Time
 }

@@ -34,6 +34,7 @@ func (r *Register) Register() {
 		r.handlers.User,
 		r.handlers.Office,
 		r.handlers.Employee,
+		r.handlers.VerificationToken,
 		r.authentication,
 		r.authorization)
 }
