@@ -15,10 +15,13 @@ type repository struct {
 }
 
 type Repository interface {
+	Create(context.Context, *model.Role) error
+	AssignPermission(context.Context, int64, []model.Permission) error
 	FindAll(context.Context) ([]model.Role, error)
 	FindAllActive(context.Context) ([]model.Role, error)
 	FindByID(context.Context, int64) (*model.Role, error)
 	FindByCode(context.Context, string) (*model.Role, error)
+	ExistByCode(context.Context, string) (bool, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -27,12 +30,34 @@ func NewRepository(db *gorm.DB) Repository {
 	}
 }
 
+func (r *repository) Create(ctx context.Context, role *model.Role) error {
+	err := r.db.WithContext(ctx).Create(role).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return errConstant.ErrAlreadyExists
+		}
+		return fmt.Errorf("create role: %w", err)
+	}
+	return nil
+}
+
+func (r *repository) AssignPermission(ctx context.Context, roleID int64, permissions []model.Permission) error {
+	role := &model.Role{
+		ID: roleID,
+	}
+	err := r.db.WithContext(ctx).Model(role).Association("Permissions").Append(&permissions)
+	if err != nil {
+		return fmt.Errorf("assign permissions: %w", err)
+	}
+	return nil
+}
+
 func (r *repository) FindAll(ctx context.Context) ([]model.Role, error) {
 	var roles []model.Role
 
 	err := r.db.WithContext(ctx).Order("id ASC").Find(&roles).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find all roles: %w", err)
 	}
 	return roles, nil
 }
@@ -69,4 +94,13 @@ func (r *repository) FindByCode(ctx context.Context, code string) (*model.Role, 
 		return nil, fmt.Errorf("find role by code: %w", err)
 	}
 	return &role, nil
+}
+
+func (r *repository) ExistByCode(ctx context.Context, code string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Where("code = ?", code).Count(&count).Error
+	if err != nil {
+		return false, fmt.Errorf("is exist by code: %w", err)
+	}
+	return count > 0, nil
 }

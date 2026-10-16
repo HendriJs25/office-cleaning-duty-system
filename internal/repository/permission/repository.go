@@ -13,13 +13,24 @@ type repository struct {
 }
 
 type Repository interface {
+	FindAll(context.Context) ([]model.Permission, error)
 	FindCodesByRoleID(context.Context, int64) ([]string, error)
+	FindByCodes(context.Context, []string) ([]model.Permission, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
 	return &repository{
 		db: db,
 	}
+}
+
+func (r *repository) FindAll(ctx context.Context) ([]model.Permission, error) {
+	var permissions []model.Permission
+	err := r.db.WithContext(ctx).Find(&permissions).Error
+	if err != nil {
+		return nil, err
+	}
+	return permissions, nil
 }
 
 func (r *repository) FindCodesByRoleID(ctx context.Context, roleID int64) ([]string, error) {
@@ -34,4 +45,13 @@ func (r *repository) FindCodesByRoleID(ctx context.Context, roleID int64) ([]str
 	}
 
 	return codes, nil
+}
+
+func (r *repository) FindByCodes(ctx context.Context, codes []string) ([]model.Permission, error) {
+	var permissions []model.Permission
+	err := r.db.WithContext(ctx).Where("code IN ?", codes).Find(&permissions).Error
+	if err != nil {
+		return nil, fmt.Errorf("get permissions by code: %w", err)
+	}
+	return permissions, nil
 }

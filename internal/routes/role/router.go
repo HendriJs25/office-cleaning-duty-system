@@ -10,5 +10,6 @@ import (
 
 func Register(router *gin.RouterGroup, handler *rolehandler.Handler, authorization *middleware.Authorization) {
 	router.GET("/roles", authorization.RequirePermission(constants.PermissionRoleRead), handler.GetAll)
+	router.POST("/roles", authorization.RequirePermission(constants.PermissionRoleCreate), authorization.RequirePermission(constants.PermissionRoleAssignPermission), handler.Create)
 	router.GET("/roles/options", authorization.RequirePermission(constants.PermissionRoleRead), handler.GetAllActiveRoles)
 }

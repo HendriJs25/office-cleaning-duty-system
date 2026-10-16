@@ -11,3 +11,9 @@ type GetAllActiveRolesResult struct {
 	ID   int64
 	Name string
 }
+
+type CreateRoleInput struct {
+	Code            string
+	Name            string
+	PermissionsCode []string
+}
