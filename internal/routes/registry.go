@@ -30,6 +30,7 @@ func (r *Register) Register() {
 	authroutes.Register(
 		r.router,
 		r.handlers.Auth,
+		r.handlers.Permission,
 		r.handlers.Role,
 		r.handlers.User,
 		r.handlers.Office,

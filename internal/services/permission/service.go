@@ -15,6 +15,7 @@ type service struct {
 }
 
 type Service interface {
+	GetAllPermissionsForOptions(context.Context) ([]GetPermissionsForOptionsResult, error)
 	GetCodesByRoleID(context.Context, int64) ([]string, error)
 }
 
@@ -23,6 +24,21 @@ func NewService(permissionRepository permissionrepository.Repository, permission
 		permissionRepository:      permissionRepository,
 		permissionCacheRepository: permissionCacheRepository,
 	}
+}
+
+func (s *service) GetAllPermissionsForOptions(ctx context.Context) ([]GetPermissionsForOptionsResult, error) {
+	permissions, err := s.permissionRepository.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var result []GetPermissionsForOptionsResult
+	for _, permission := range permissions {
+		result = append(result, GetPermissionsForOptionsResult{
+			Code: permission.Code,
+			Name: permission.Name,
+		})
+	}
+	return result, nil
 }
 
 func (s *service) GetCodesByRoleID(ctx context.Context, roleID int64) ([]string, error) {

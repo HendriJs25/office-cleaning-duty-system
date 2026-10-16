@@ -11,6 +11,8 @@ func messageJa(err error) string {
 		return "メールアドレスまたはパスワードが正しくありません"
 	case errors.Is(err, errConstant.ErrInvalidRegistrationToken):
 		return "登録用トークンが無効、または有効期限が切れています"
+	case errors.Is(err, errConstant.ErrInvalidPermission):
+		return "指定された権限に無効なものが含まれています"
 	case errors.Is(err, errConstant.ErrAccountIsDeactivated):
 		return "このアカウントは無効化されています。管理者にお問い合わせください"
 	case errors.Is(err, errConstant.ErrAlreadyDeactivated):

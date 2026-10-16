@@ -1,23 +1,76 @@
 package role
 
 import (
+	errConstant "cleaning/internal/constants/error"
+	"cleaning/internal/domain/model"
+	"cleaning/internal/repository"
+	permissionrepository "cleaning/internal/repository/permission"
 	rolerepository "cleaning/internal/repository/role"
 	"context"
 )
 
 type service struct {
-	roleRepository rolerepository.Repository
+	roleRepository       rolerepository.Repository
+	permissionRepository permissionrepository.Repository
+	transactionManager   repository.TransactionManager
 }
 
 type Service interface {
+	Create(context.Context, CreateRoleInput) error
 	GetAll(context.Context) ([]RoleResult, error)
 	GetAllActiveRoles(context.Context) ([]GetAllActiveRolesResult, error)
 }
 
-func NewService(roleRepository rolerepository.Repository) Service {
+func NewService(roleRepository rolerepository.Repository, permissionRepository permissionrepository.Repository, transactionManager repository.TransactionManager) Service {
 	return &service{
-		roleRepository: roleRepository,
+		roleRepository:       roleRepository,
+		permissionRepository: permissionRepository,
+		transactionManager:   transactionManager,
 	}
+}
+
+func (s *service) Create(ctx context.Context, input CreateRoleInput) error {
+	exist, err := s.roleRepository.ExistByCode(ctx, input.Code)
+	if err != nil {
+		return err
+	}
+	if exist {
+		return errConstant.ErrAlreadyExists
+	}
+
+	permissions, err := s.permissionRepository.FindByCodes(ctx, input.PermissionsCode)
+	if err != nil {
+		return err
+	}
+
+	if len(input.PermissionsCode) != len(permissions) {
+		return errConstant.ErrInvalidPermission
+	}
+
+	err = s.transactionManager.WithinTransaction(ctx, func(repositories *repository.Registry) error {
+		role := &model.Role{
+			Code:     input.Code,
+			Name:     input.Name,
+			IsActive: true,
+		}
+
+		err := repositories.Role.Create(ctx, role)
+		if err != nil {
+			return err
+		}
+
+		err = repositories.Role.AssignPermission(ctx, role.ID, permissions)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *service) GetAll(ctx context.Context) ([]RoleResult, error) {

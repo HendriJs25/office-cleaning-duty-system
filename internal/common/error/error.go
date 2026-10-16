@@ -25,6 +25,7 @@ var ErrValidator = map[string]string{
 	"required_with":    "%sは%sが入力されている場合、必須です",
 	"gtfield":          "%sは%sより後の日付を指定してください",
 	"katakana":         "%sはカタカナのみで入力してください",
+	"unique":           "%sに重複した値が含まれています",
 }
 
 var FieldNameJa = map[string]string{
@@ -48,6 +49,7 @@ var FieldNameJa = map[string]string{
 	"NewPassword":         "新しいパスワード",
 	"NewPasswordConfirm":  "新しいパスワード（確認用）",
 	"Token":               "トークン",
+	"PermissionCodes":     "権限コード",
 }
 
 func ErrValidationResponse(err error) (validationResponse []ValidationResponse) {
