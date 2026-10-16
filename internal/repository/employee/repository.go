@@ -22,6 +22,7 @@ type Repository interface {
 	FindAllActive(context.Context) ([]model.Employee, error)
 	FindByID(context.Context, *int64) (*model.Employee, error)
 	FindByUUID(context.Context, uuid.UUID) (*model.Employee, error)
+	FindByIDForUpdate(context.Context, int64) (*model.Employee, error)
 	FindByUUIDForUpdate(context.Context, uuid.UUID) (*model.Employee, error)
 	FindAssignableEmployees(context.Context, *uuid.UUID) ([]model.Employee, error)
 	UpdateByUUID(context.Context, uuid.UUID, map[string]any) error
@@ -81,6 +82,18 @@ func (r *repository) FindByUUID(ctx context.Context, employeeUUID uuid.UUID) (*m
 			return nil, errConstant.ErrEmployeeNotFound
 		}
 		return nil, fmt.Errorf("find employee by uuid: %w", err)
+	}
+	return &employee, nil
+}
+
+func (r *repository) FindByIDForUpdate(ctx context.Context, employeeID int64) (*model.Employee, error) {
+	var employee model.Employee
+	err := r.db.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", employeeID).Take(&employee).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("find employee by id: %w", err)
 	}
 	return &employee, nil
 }

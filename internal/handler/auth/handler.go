@@ -101,3 +101,49 @@ func (h *Handler) Logout(c *gin.Context) {
 		Gin:     c,
 	})
 }
+
+func (h *Handler) Register(c *gin.Context) {
+	var req request.RegisterRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	err := h.authService.Register(c.Request.Context(), authservice.RegisterInput{
+		Token:    req.Token,
+		UserName: req.UserName,
+		Email:    req.Email,
+		Password: req.Password,
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrInvalidRegistrationToken),
+			errors.Is(err, errConstant.ErrExpiredToken),
+			errors.Is(err, errConstant.ErrEmployeeNotFound),
+			errors.Is(err, errConstant.ErrEmployeeInActive),
+			errors.Is(err, errConstant.ErrEmployeeAlreadyAssigned):
+			response.UnprocessableEntity(c, errConstant.ErrInvalidRegistrationToken)
+			return
+		case errors.Is(err, errConstant.ErrAlreadyExists):
+			response.ConflictDuplicate(c, err, "メールアドレス")
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithError(err).Error("Register failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusCreated,
+		Message: "アカウントの登録が完了しました",
+		Gin:     c,
+	})
+}

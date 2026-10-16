@@ -18,6 +18,7 @@ type Repository interface {
 	FindAll(context.Context) ([]model.Role, error)
 	FindAllActive(context.Context) ([]model.Role, error)
 	FindByID(context.Context, int64) (*model.Role, error)
+	FindByCode(context.Context, string) (*model.Role, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -56,4 +57,16 @@ func (r *repository) FindAllActive(ctx context.Context) ([]model.Role, error) {
 		return nil, fmt.Errorf("find all active roles: %w", err)
 	}
 	return roles, nil
+}
+
+func (r *repository) FindByCode(ctx context.Context, code string) (*model.Role, error) {
+	var role model.Role
+	err := r.db.WithContext(ctx).Where("code = ?", code).Take(&role).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("find role by code: %w", err)
+	}
+	return &role, nil
 }

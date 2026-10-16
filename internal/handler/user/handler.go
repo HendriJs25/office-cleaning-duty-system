@@ -202,7 +202,7 @@ func (h *Handler) Create(c *gin.Context) {
 
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code:    http.StatusCreated,
-		Message: "ユーザーを作成しました。",
+		Message: "ユーザーを作成しました",
 		Gin:     c,
 	})
 }

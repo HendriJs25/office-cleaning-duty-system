@@ -29,3 +29,10 @@ type AuthenticatedUser struct {
 	RoleID   int64
 	RoleName string
 }
+
+type RegisterInput struct {
+	Token    string
+	UserName string
+	Email    string
+	Password string
+}
