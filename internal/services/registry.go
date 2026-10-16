@@ -30,7 +30,7 @@ func NewRegistry(repositories *repository.Registry, sessionRepository sessionrep
 	jwtService := jwtservice.NewService(jwtConfig)
 
 	return &Registry{
-		AuthService:              authservice.NewService(repositories.User, sessionRepository, jwtService),
+		AuthService:              authservice.NewService(repositories.User, sessionRepository, repositories.Role, repositories.VerificationToken, jwtService, repositories.Transaction),
 		JWTService:               jwtService,
 		RoleService:              roleservice.NewService(repositories.Role),
 		PermissionService:        permissionservice.NewService(repositories.Permission, permissionCacheRepository),
