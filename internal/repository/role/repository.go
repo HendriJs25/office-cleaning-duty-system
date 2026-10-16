@@ -98,7 +98,7 @@ func (r *repository) FindByCode(ctx context.Context, code string) (*model.Role, 
 
 func (r *repository) ExistByCode(ctx context.Context, code string) (bool, error) {
 	var count int64
-	err := r.db.WithContext(ctx).Where("code = ?", code).Count(&count).Error
+	err := r.db.WithContext(ctx).Model(&model.Role{}).Where("code = ?", code).Count(&count).Error
 	if err != nil {
 		return false, fmt.Errorf("is exist by code: %w", err)
 	}
