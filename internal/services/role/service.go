@@ -19,6 +19,7 @@ type Service interface {
 	Create(context.Context, CreateRoleInput) error
 	GetAll(context.Context) ([]RoleResult, error)
 	GetAllActiveRoles(context.Context) ([]GetAllActiveRolesResult, error)
+	GetRoleDetail(context.Context, int64) (*GetRoleDetailResult, error)
 }
 
 func NewService(roleRepository rolerepository.Repository, permissionRepository permissionrepository.Repository, transactionManager repository.TransactionManager) Service {
@@ -114,4 +115,29 @@ func (s *service) GetAllActiveRoles(ctx context.Context) ([]GetAllActiveRolesRes
 	}
 
 	return roles, nil
+}
+
+func (s *service) GetRoleDetail(ctx context.Context, roleID int64) (*GetRoleDetailResult, error) {
+	role, err := s.roleRepository.FindByID(ctx, roleID, true)
+	if err != nil {
+		return nil, err
+	}
+
+	permissionResult := make([]PermissionInfo, 0, len(role.Permissions))
+	for _, permission := range role.Permissions {
+		permissionResult = append(permissionResult, PermissionInfo{
+			ID:   permission.ID,
+			Code: permission.Code,
+			Name: permission.Name,
+		})
+	}
+
+	roleResult := GetRoleDetailResult{
+		ID:          role.ID,
+		Code:        role.Code,
+		Name:        role.Name,
+		IsActive:    role.IsActive,
+		Permissions: permissionResult,
+	}
+	return &roleResult, nil
 }

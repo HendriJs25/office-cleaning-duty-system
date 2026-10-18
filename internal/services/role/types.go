@@ -7,6 +7,20 @@ type RoleResult struct {
 	IsActive bool
 }
 
+type GetRoleDetailResult struct {
+	ID          int64
+	Code        string
+	Name        string
+	IsActive    bool
+	Permissions []PermissionInfo
+}
+
+type PermissionInfo struct {
+	ID   int64
+	Code string
+	Name string
+}
+
 type GetAllActiveRolesResult struct {
 	ID   int64
 	Name string

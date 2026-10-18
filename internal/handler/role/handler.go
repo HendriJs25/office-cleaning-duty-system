@@ -9,6 +9,8 @@ import (
 	roleservice "cleaning/internal/services/role"
 	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	customValidator "github.com/go-playground/validator/v10"
@@ -122,6 +124,51 @@ func (h *Handler) GetAllActiveRoles(c *gin.Context) {
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code: http.StatusOK,
 		Data: roles,
+		Gin:  c,
+	})
+
+}
+
+func (h *Handler) GetRoleDetail(c *gin.Context) {
+	idStr := strings.TrimSpace(c.Param("id"))
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c)
+		return
+	}
+
+	role, err := h.roleService.GetRoleDetail(c.Request.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrRoleNotFound):
+			response.NotFound(c)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("roleID", id).WithError(err).Error("Get role failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	permissionResponse := make([]responsedto.PermissionsResponse, 0, len(role.Permissions))
+	for _, permission := range role.Permissions {
+		permissionResponse = append(permissionResponse, responsedto.PermissionsResponse{
+			ID:   permission.ID,
+			Code: permission.Code,
+			Name: permission.Name,
+		})
+	}
+
+	roleResponse := responsedto.GetRoleDetailResponse{
+		ID:          role.ID,
+		Code:        role.Code,
+		Name:        role.Name,
+		IsActive:    role.IsActive,
+		Permissions: permissionResponse,
+	}
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code: http.StatusOK,
+		Data: roleResponse,
 		Gin:  c,
 	})
 

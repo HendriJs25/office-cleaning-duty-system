@@ -19,7 +19,7 @@ type Repository interface {
 	AssignPermission(context.Context, int64, []model.Permission) error
 	FindAll(context.Context) ([]model.Role, error)
 	FindAllActive(context.Context) ([]model.Role, error)
-	FindByID(context.Context, int64) (*model.Role, error)
+	FindByID(context.Context, int64, bool) (*model.Role, error)
 	FindByCode(context.Context, string) (*model.Role, error)
 	ExistByCode(context.Context, string) (bool, error)
 }
@@ -62,9 +62,16 @@ func (r *repository) FindAll(ctx context.Context) ([]model.Role, error) {
 	return roles, nil
 }
 
-func (r *repository) FindByID(ctx context.Context, id int64) (*model.Role, error) {
+func (r *repository) FindByID(ctx context.Context, id int64, withPermission bool) (*model.Role, error) {
 	var role model.Role
-	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&role).Error
+	query := r.db.WithContext(ctx).Where("id = ?", id)
+
+	if withPermission {
+		query = query.Preload("Permissions")
+	}
+
+	err := query.Take(&role).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errConstant.ErrRoleNotFound
