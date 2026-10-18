@@ -122,7 +122,7 @@ func (s *service) GetProfile(ctx context.Context, userUUID uuid.UUID) (*GetUserP
 }
 
 func (s *service) Create(ctx context.Context, createInput CreateUserInput) error {
-	role, err := s.roleRepository.FindByID(ctx, createInput.RoleID)
+	role, err := s.roleRepository.FindByID(ctx, createInput.RoleID, false)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func (s *service) UpdateUserByAdmin(ctx context.Context, actorUUID uuid.UUID, ta
 		return errConstant.ErrCannotUpdateSelf
 	}
 
-	role, err := s.roleRepository.FindByID(ctx, update.RoleID)
+	role, err := s.roleRepository.FindByID(ctx, update.RoleID, false)
 	if err != nil {
 		return err
 	}
