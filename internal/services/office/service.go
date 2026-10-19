@@ -13,6 +13,7 @@ type service struct {
 
 type Service interface {
 	Create(context.Context, CreateOfficeInput) error
+	GetAllOffices(context.Context) ([]GetOfficeResult, error)
 	GetAllActiveOffices(context.Context) ([]GetActiveOfficeResult, error)
 }
 
@@ -44,6 +45,26 @@ func (s *service) Create(ctx context.Context, input CreateOfficeInput) error {
 	}
 
 	return nil
+}
+
+func (s *service) GetAllOffices(ctx context.Context) ([]GetOfficeResult, error) {
+	offices, err := s.officeRepository.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]GetOfficeResult, 0, len(offices))
+
+	for _, office := range offices {
+		result = append(result, GetOfficeResult{
+			ID:       office.ID,
+			Code:     office.Code,
+			Name:     office.Name,
+			Address:  office.Address,
+			IsActive: office.IsActive,
+		})
+	}
+	return result, nil
 }
 
 func (s *service) GetAllActiveOffices(ctx context.Context) ([]GetActiveOfficeResult, error) {

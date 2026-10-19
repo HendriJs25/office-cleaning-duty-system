@@ -74,15 +74,6 @@ func UnprocessableEntity(c *gin.Context, err error) {
 	})
 }
 
-func Empty(c *gin.Context, resource string) {
-	HTTPResponse(ParamHTTPResponse{
-		Code:    http.StatusOK,
-		Message: fmt.Sprintf("%sデータがありません", resource),
-		Data:    []any{},
-		Gin:     c,
-	})
-}
-
 func ConflictDuplicate(c *gin.Context, err error, field string) {
 	HTTPResponse(ParamHTTPResponse{
 		Code:    http.StatusConflict,
