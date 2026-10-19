@@ -260,3 +260,33 @@ func (h *Handler) DeactivateEmployee(c *gin.Context) {
 	})
 
 }
+
+func (h *Handler) ActivateEmployee(c *gin.Context) {
+	uuidStr := c.Param("uuid")
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	err = h.employeeService.ActivateEmployee(c.Request.Context(), parsedUUID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrEmployeeNotFound):
+			response.NotFound(c)
+			return
+		case errors.Is(err, errConstant.ErrAlreadyActivated):
+			response.Conflict(c, err)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("employee_uuid", parsedUUID).WithError(err).Error("Activate employee failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "従業員を有効化しました",
+		Gin:     c,
+	})
+}

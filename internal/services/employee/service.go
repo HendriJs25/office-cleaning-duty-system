@@ -34,6 +34,7 @@ type Service interface {
 	GetEmployeeDetail(context.Context, uuid.UUID) (*GetEmployeeDetailsResult, error)
 	UpdateEmployeeByAdmin(context.Context, uuid.UUID, UpdateEmployeeByAdminInput) error
 	DeactivateEmployee(context.Context, uuid.UUID) error
+	ActivateEmployee(context.Context, uuid.UUID) error
 }
 
 func NewService(employeeRepository employeerepository.Repository, officeRepository officerepository.Repository, verificationTokenRepository verificationtokenrepository.Repository, userRepository userrepository.Repository, transactionManager repository.TransactionManager, sessionRepository sessionrepository.Repository) Service {
@@ -230,5 +231,21 @@ func (s *service) DeactivateEmployee(ctx context.Context, employeeUUID uuid.UUID
 		return err
 	}
 
+	return nil
+}
+
+func (s *service) ActivateEmployee(ctx context.Context, employeeUUID uuid.UUID) error {
+	employee, err := s.employeeRepository.FindByUUID(ctx, employeeUUID)
+	if err != nil {
+		return err
+	}
+	if employee.IsActive {
+		return errConstant.ErrAlreadyActivated
+	}
+
+	err = s.employeeRepository.UpdateStatus(ctx, employeeUUID, true)
+	if err != nil {
+		return err
+	}
 	return nil
 }
