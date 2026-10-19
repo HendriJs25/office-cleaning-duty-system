@@ -5,8 +5,11 @@ import (
 	"cleaning/internal/constants"
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
+	"cleaning/internal/repository"
 	employeerepository "cleaning/internal/repository/employee"
 	officerepository "cleaning/internal/repository/office"
+	sessionrepository "cleaning/internal/repository/session"
+	userrepository "cleaning/internal/repository/user"
 	verificationtokenrepository "cleaning/internal/repository/verificationtoken"
 	"context"
 	"errors"
@@ -19,6 +22,9 @@ type service struct {
 	employeeRepository          employeerepository.Repository
 	officeRepository            officerepository.Repository
 	verificationTokenRepository verificationtokenrepository.Repository
+	userRepository              userrepository.Repository
+	transactionManager          repository.TransactionManager
+	sessionRepository           sessionrepository.Repository
 }
 
 type Service interface {
@@ -27,13 +33,17 @@ type Service interface {
 	GetAllAssignableEmployees(context.Context, *uuid.UUID) ([]GetAssignableEmployeesResult, error)
 	GetEmployeeDetail(context.Context, uuid.UUID) (*GetEmployeeDetailsResult, error)
 	UpdateEmployeeByAdmin(context.Context, uuid.UUID, UpdateEmployeeByAdminInput) error
+	DeactivateEmployee(context.Context, uuid.UUID) error
 }
 
-func NewService(employeeRepository employeerepository.Repository, officeRepository officerepository.Repository, verificationTokenRepository verificationtokenrepository.Repository) Service {
+func NewService(employeeRepository employeerepository.Repository, officeRepository officerepository.Repository, verificationTokenRepository verificationtokenrepository.Repository, userRepository userrepository.Repository, transactionManager repository.TransactionManager, sessionRepository sessionrepository.Repository) Service {
 	return &service{
 		employeeRepository:          employeeRepository,
 		officeRepository:            officeRepository,
 		verificationTokenRepository: verificationTokenRepository,
+		userRepository:              userRepository,
+		transactionManager:          transactionManager,
+		sessionRepository:           sessionRepository,
 	}
 }
 
@@ -164,7 +174,6 @@ func (s *service) UpdateEmployeeByAdmin(ctx context.Context, employeeUUID uuid.U
 		"given_name":            input.GivenName,
 		"family_name_kana":      input.FamilyNameKana,
 		"given_name_kana":       input.GivenNameKana,
-		"is_active":             input.IsActive,
 		"employment_start_date": input.EmploymentStartDate,
 		"employment_end_date":   input.EmploymentEndDate,
 	}
@@ -173,5 +182,53 @@ func (s *service) UpdateEmployeeByAdmin(ctx context.Context, employeeUUID uuid.U
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *service) DeactivateEmployee(ctx context.Context, employeeUUID uuid.UUID) error {
+	employee, err := s.employeeRepository.FindByUUID(ctx, employeeUUID)
+	if err != nil {
+		return err
+	}
+	if !employee.IsActive {
+		return errConstant.ErrAlreadyDeactivated
+	}
+
+	user, err := s.userRepository.FindByEmployeeID(ctx, employee.ID)
+	if err != nil && !errors.Is(err, errConstant.ErrNotFound) {
+		return err
+	}
+
+	if user != nil {
+		err = s.sessionRepository.DeleteByUserUUID(ctx, user.UUID)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = s.transactionManager.WithinTransaction(ctx, func(repositories *repository.Registry) error {
+		if user != nil {
+			err := repositories.User.UpdateStatus(ctx, user.UUID, false)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = repositories.Employee.UpdateStatus(ctx, employeeUUID, false)
+		if err != nil {
+			return err
+		}
+
+		err = repositories.VerificationToken.DeleteByEmployeeIDAndTokenType(ctx, employee.ID, constants.TokenTypeUserInvitation)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

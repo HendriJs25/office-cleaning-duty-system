@@ -26,6 +26,7 @@ type Repository interface {
 	FindByUUIDForUpdate(context.Context, uuid.UUID) (*model.Employee, error)
 	FindAssignableEmployees(context.Context, *uuid.UUID) ([]model.Employee, error)
 	UpdateByUUID(context.Context, uuid.UUID, map[string]any) error
+	UpdateStatus(context.Context, uuid.UUID, bool) error
 	IsAssignable(context.Context, uuid.UUID) (bool, error)
 }
 
@@ -138,6 +139,17 @@ func (r *repository) UpdateByUUID(ctx context.Context, employeeUUID uuid.UUID, f
 		return errConstant.ErrEmployeeNotFound
 	}
 
+	return nil
+}
+
+func (r *repository) UpdateStatus(ctx context.Context, employeeUUID uuid.UUID, isActive bool) error {
+	result := r.db.WithContext(ctx).Model(model.Employee{}).Where("uuid = ?", employeeUUID).Update("is_active", isActive)
+	if result.Error != nil {
+		return fmt.Errorf("update employee by uuid: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return errConstant.ErrEmployeeNotFound
+	}
 	return nil
 }
 
