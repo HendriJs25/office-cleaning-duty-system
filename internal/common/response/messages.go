@@ -41,6 +41,8 @@ func messageJa(err error) string {
 		return "システムロールの権限は変更できません"
 	case errors.Is(err, errConstant.ErrRoleInUse):
 		return "このロールはユーザーに割り当てられているため、無効化できません"
+	case errors.Is(err, errConstant.ErrOfficeInUse):
+		return "このオフィスは従業員に割り当てられているため、無効化できません"
 	default:
 		return "サーバー内部でエラーが発生しました"
 	}
