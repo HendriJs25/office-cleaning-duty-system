@@ -210,3 +210,34 @@ func (h *Handler) DeactivateRole(c *gin.Context) {
 		Gin:     c,
 	})
 }
+
+func (h *Handler) ActivateRole(c *gin.Context) {
+	idStr := strings.TrimSpace(c.Param("id"))
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c)
+		return
+	}
+
+	err = h.roleService.ActivateRole(c.Request.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrRoleNotFound):
+			response.NotFound(c)
+			return
+		case errors.Is(err, errConstant.ErrAlreadyActivated):
+			response.Conflict(c, err)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("id", id).WithError(err).Error("Activate role failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "ロールを有効化しました",
+		Gin:     c,
+	})
+}

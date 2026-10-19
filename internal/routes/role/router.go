@@ -14,4 +14,5 @@ func Register(router *gin.RouterGroup, handler *rolehandler.Handler, authorizati
 	router.GET("/roles/:id", authorization.RequirePermission(constants.PermissionRoleRead), handler.GetRoleDetail)
 	router.GET("/roles/options", authorization.RequirePermission(constants.PermissionRoleRead), handler.GetAllActiveRoles)
 	router.PATCH("/roles/:id/deactivate", authorization.RequirePermission(constants.PermissionRoleDeActivate), handler.DeactivateRole)
+	router.PATCH("roles/:id/activate", authorization.RequirePermission(constants.PermissionRoleDeActivate), handler.ActivateRole)
 }

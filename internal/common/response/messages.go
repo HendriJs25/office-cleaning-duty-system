@@ -18,7 +18,7 @@ func messageJa(err error) string {
 	case errors.Is(err, errConstant.ErrAlreadyDeactivated):
 		return "既に無効化されています"
 	case errors.Is(err, errConstant.ErrAlreadyActivated):
-		return "このアカウントは既に有効化されています"
+		return "既に有効化されています"
 	case errors.Is(err, errConstant.ErrEmployeeAlreadyAssigned):
 		return "この従業員は既にユーザーに登録されています"
 	case errors.Is(err, errConstant.ErrCannotUpdateSelf):
