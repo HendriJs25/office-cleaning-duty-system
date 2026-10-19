@@ -5,14 +5,16 @@ import (
 	"cleaning/internal/domain/model"
 	"cleaning/internal/repository"
 	permissionrepository "cleaning/internal/repository/permission"
+	"cleaning/internal/repository/permissioncache"
 	rolerepository "cleaning/internal/repository/role"
 	"context"
 )
 
 type service struct {
-	roleRepository       rolerepository.Repository
-	permissionRepository permissionrepository.Repository
-	transactionManager   repository.TransactionManager
+	roleRepository            rolerepository.Repository
+	permissionRepository      permissionrepository.Repository
+	permissionCacheRepository permissioncache.Repository
+	transactionManager        repository.TransactionManager
 }
 
 type Service interface {
@@ -22,13 +24,15 @@ type Service interface {
 	GetRoleDetail(context.Context, int64) (*GetRoleDetailResult, error)
 	DeactivateRole(context.Context, int64) error
 	ActivateRole(context.Context, int64) error
+	UpdateRoleByID(context.Context, int64, UpdateRoleInput) error
 }
 
-func NewService(roleRepository rolerepository.Repository, permissionRepository permissionrepository.Repository, transactionManager repository.TransactionManager) Service {
+func NewService(roleRepository rolerepository.Repository, permissionRepository permissionrepository.Repository, permissionCacheRepository permissioncache.Repository, transactionManager repository.TransactionManager) Service {
 	return &service{
-		roleRepository:       roleRepository,
-		permissionRepository: permissionRepository,
-		transactionManager:   transactionManager,
+		roleRepository:            roleRepository,
+		permissionRepository:      permissionRepository,
+		permissionCacheRepository: permissionCacheRepository,
+		transactionManager:        transactionManager,
 	}
 }
 
@@ -187,5 +191,56 @@ func (s *service) ActivateRole(ctx context.Context, roleID int64) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *service) UpdateRoleByID(ctx context.Context, roleID int64, update UpdateRoleInput) error {
+	role, err := s.roleRepository.FindByID(ctx, roleID, false)
+	if err != nil {
+		return err
+	}
+	if role.IsSystem {
+		return errConstant.ErrSystemRoleImmutable
+	}
+
+	err = s.permissionCacheRepository.DeleteRolePermissions(ctx, roleID)
+	if err != nil {
+		return err
+	}
+
+	err = s.transactionManager.WithinTransaction(ctx, func(repositories *repository.Registry) error {
+		role, err := repositories.Role.FindByIDForUpdate(ctx, roleID)
+		if err != nil {
+			return err
+		}
+		permissions, err := repositories.Permission.FindByCodes(ctx, update.PermissionsCode)
+		if err != nil {
+			return err
+		}
+
+		if len(update.PermissionsCode) != len(permissions) {
+			return errConstant.ErrInvalidPermission
+		}
+
+		updatesRole := map[string]any{
+			"name":        update.Name,
+			"description": update.Description,
+		}
+		err = repositories.Role.UpdateByID(ctx, role.ID, updatesRole)
+		if err != nil {
+			return err
+		}
+
+		err = repositories.Role.UpdatePermissionByID(ctx, role.ID, permissions)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

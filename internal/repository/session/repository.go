@@ -74,12 +74,9 @@ func (r *repository) Get(ctx context.Context, accessToken string) (*model.Sessio
 }
 
 func (r *repository) Delete(ctx context.Context, accessToken string) error {
-	deleted, err := r.client.Del(ctx, sessionKey(accessToken)).Result()
+	err := r.client.Del(ctx, sessionKey(accessToken)).Err()
 	if err != nil {
 		return fmt.Errorf("delete session: %w", err)
-	}
-	if deleted == 0 {
-		return errConstant.ErrNotFound
 	}
 	return nil
 }

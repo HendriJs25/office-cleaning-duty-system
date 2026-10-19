@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type repository struct {
@@ -20,9 +21,12 @@ type Repository interface {
 	FindAll(context.Context) ([]model.Role, error)
 	FindAllActive(context.Context) ([]model.Role, error)
 	FindByID(context.Context, int64, bool) (*model.Role, error)
+	FindByIDForUpdate(context.Context, int64) (*model.Role, error)
 	FindByCode(context.Context, string) (*model.Role, error)
 	ExistByCode(context.Context, string) (bool, error)
 	UpdateStatus(context.Context, int64, bool) error
+	UpdateByID(context.Context, int64, map[string]any) error
+	UpdatePermissionByID(context.Context, int64, []model.Permission) error
 	HasAssignedUsers(context.Context, int64) (bool, error)
 }
 
@@ -83,6 +87,18 @@ func (r *repository) FindByID(ctx context.Context, id int64, withPermission bool
 	return &role, nil
 }
 
+func (r *repository) FindByIDForUpdate(ctx context.Context, id int64) (*model.Role, error) {
+	var role model.Role
+	err := r.db.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", id).Take(&role).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrRoleNotFound
+		}
+		return nil, fmt.Errorf("find role by id: %w", err)
+	}
+	return &role, nil
+}
+
 func (r *repository) FindAllActive(ctx context.Context) ([]model.Role, error) {
 	var roles []model.Role
 
@@ -124,6 +140,30 @@ func (r *repository) UpdateStatus(ctx context.Context, roleID int64, isActive bo
 		return errConstant.ErrRoleNotFound
 	}
 
+	return nil
+}
+
+func (r *repository) UpdateByID(ctx context.Context, roleID int64, fields map[string]any) error {
+	result := r.db.WithContext(ctx).Model(&model.Role{}).Where("id = ?", roleID).Updates(fields)
+	if result.Error != nil {
+		return fmt.Errorf("update role by id: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return errConstant.ErrRoleNotFound
+	}
+	return nil
+}
+
+func (r *repository) UpdatePermissionByID(ctx context.Context, roleID int64, permissions []model.Permission) error {
+	role := &model.Role{
+		ID: roleID,
+	}
+
+	err := r.db.WithContext(ctx).Model(role).Association("Permissions").Replace(&permissions)
+	if err != nil {
+		return fmt.Errorf("update permissions: %w", err)
+	}
 	return nil
 }
 
