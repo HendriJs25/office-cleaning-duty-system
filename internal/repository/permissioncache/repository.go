@@ -23,6 +23,7 @@ type repository struct {
 type Repository interface {
 	GetRolePermissions(context.Context, int64) ([]string, error)
 	SetRolePermissions(context.Context, int64, []string) error
+	DeleteRolePermissions(context.Context, int64) error
 }
 
 func NewRepository(client redislib.Cmdable) Repository {
@@ -59,6 +60,14 @@ func (r *repository) SetRolePermissions(ctx context.Context, roleID int64, permi
 		return fmt.Errorf("set cache role permissions: %w", err)
 	}
 
+	return nil
+}
+
+func (r *repository) DeleteRolePermissions(ctx context.Context, roleID int64) error {
+	err := r.client.Del(ctx, rolePermissionCacheKey(roleID)).Err()
+	if err != nil {
+		return fmt.Errorf("delete cache role permissions: %w", err)
+	}
 	return nil
 }
 

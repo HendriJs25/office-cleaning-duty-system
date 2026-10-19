@@ -241,3 +241,52 @@ func (h *Handler) ActivateRole(c *gin.Context) {
 		Gin:     c,
 	})
 }
+
+func (h *Handler) UpdateRole(c *gin.Context) {
+	idStr := strings.TrimSpace(c.Param("id"))
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c)
+		return
+	}
+
+	var req request.UpdateRoleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	err = h.roleService.UpdateRoleByID(c.Request.Context(), id, roleservice.UpdateRoleInput{
+		Name:            req.Name,
+		Description:     req.Description,
+		PermissionsCode: req.PermissionCodes,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrRoleNotFound):
+			response.NotFound(c)
+			return
+		case errors.Is(err, errConstant.ErrSystemRoleImmutable):
+			response.Conflict(c, err)
+			return
+		case errors.Is(err, errConstant.ErrInvalidPermission):
+			response.UnprocessableEntity(c, err)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("id", id).WithError(err).Error("Update role failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "ロールを更新しました",
+		Gin:     c,
+	})
+
+}

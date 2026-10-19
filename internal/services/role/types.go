@@ -31,3 +31,9 @@ type CreateRoleInput struct {
 	Name            string
 	PermissionsCode []string
 }
+
+type UpdateRoleInput struct {
+	Name            string
+	Description     *string
+	PermissionsCode []string
+}
