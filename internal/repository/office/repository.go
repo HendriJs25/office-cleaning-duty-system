@@ -17,6 +17,7 @@ type repository struct {
 type Repository interface {
 	Create(context.Context, *model.Office) error
 	ExistByCode(context.Context, string) (bool, error)
+	GetAll(context.Context) ([]model.Office, error)
 	GetAllActive(context.Context) ([]model.Office, error)
 	GetByID(context.Context, int64) (*model.Office, error)
 }
@@ -41,6 +42,15 @@ func (r *repository) ExistByCode(ctx context.Context, code string) (bool, error)
 		return false, fmt.Errorf("is office exist: %w", err)
 	}
 	return count > 0, nil
+}
+
+func (r *repository) GetAll(ctx context.Context) ([]model.Office, error) {
+	var offices []model.Office
+	err := r.db.WithContext(ctx).Order("id ASC").Find(&offices).Error
+	if err != nil {
+		return nil, fmt.Errorf("get offices: %w", err)
+	}
+	return offices, nil
 }
 
 func (r *repository) GetAllActive(ctx context.Context) ([]model.Office, error) {

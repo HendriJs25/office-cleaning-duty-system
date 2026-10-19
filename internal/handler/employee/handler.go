@@ -80,12 +80,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 		return
 	}
 
-	if len(employees) == 0 {
-		response.Empty(c, "従業員")
-		return
-	}
-
-	var result []responsedto.GetEmployeesResponse
+	result := make([]responsedto.GetEmployeesResponse, 0, len(employees))
 	for _, employee := range employees {
 		result = append(result, responsedto.GetEmployeesResponse{
 			ID:                  employee.ID,
@@ -124,12 +119,7 @@ func (h *Handler) GetAllAssignableEmployees(c *gin.Context) {
 		return
 	}
 
-	if len(employees) == 0 {
-		response.Empty(c, "従業員")
-		return
-	}
-
-	var result []responsedto.GetActiveEmployeesResponse
+	result := make([]responsedto.GetActiveEmployeesResponse, 0, len(employees))
 	for _, employee := range employees {
 		result = append(result, responsedto.GetActiveEmployeesResponse{
 			ID:       employee.ID,

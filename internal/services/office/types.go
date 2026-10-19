@@ -10,3 +10,11 @@ type GetActiveOfficeResult struct {
 	ID   int64
 	Name string
 }
+
+type GetOfficeResult struct {
+	ID       int64
+	Code     string
+	Name     string
+	Address  *string
+	IsActive bool
+}

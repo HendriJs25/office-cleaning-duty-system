@@ -9,6 +9,7 @@ import (
 )
 
 func Register(router *gin.RouterGroup, handler *officehandler.Handler, authorization *middleware.Authorization) {
+	router.GET("/offices", authorization.RequirePermission(constants.PermissionOfficeRead), handler.GetAll)
 	router.POST("/offices", authorization.RequirePermission(constants.PermissionOfficeCreate), handler.Create)
 	router.GET("/offices/options", authorization.RequirePermission(constants.PermissionOfficeRead), handler.GetAllActiveOffices)
 }

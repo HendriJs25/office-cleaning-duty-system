@@ -71,21 +71,17 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 func (h *Handler) GetAll(c *gin.Context) {
-	result, err := h.roleService.GetAll(c.Request.Context())
+	roles, err := h.roleService.GetAll(c.Request.Context())
 	if err != nil {
 		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all roles failed")
 		response.InternalServerError(c)
 		return
 	}
 
-	if len(result) == 0 {
-		response.Empty(c, "ロール")
-		return
-	}
+	result := make([]responsedto.RoleResponse, 0, len(roles))
 
-	var roles []responsedto.RoleResponse
-	for _, role := range result {
-		roles = append(roles, responsedto.RoleResponse{
+	for _, role := range roles {
+		result = append(result, responsedto.RoleResponse{
 			ID:       role.ID,
 			Code:     role.Code,
 			Name:     role.Name,
@@ -95,27 +91,23 @@ func (h *Handler) GetAll(c *gin.Context) {
 
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code: http.StatusOK,
-		Data: roles,
+		Data: result,
 		Gin:  c,
 	})
 }
 
 func (h *Handler) GetAllActiveRoles(c *gin.Context) {
-	result, err := h.roleService.GetAllActiveRoles(c.Request.Context())
+	roles, err := h.roleService.GetAllActiveRoles(c.Request.Context())
 	if err != nil {
 		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all active roles failed")
 		response.InternalServerError(c)
 		return
 	}
 
-	if len(result) == 0 {
-		response.Empty(c, "ロール")
-		return
-	}
+	result := make([]responsedto.GetActiveRolesResponse, 0, len(roles))
 
-	var roles []responsedto.GetActiveRolesResponse
-	for _, role := range result {
-		roles = append(roles, responsedto.GetActiveRolesResponse{
+	for _, role := range roles {
+		result = append(result, responsedto.GetActiveRolesResponse{
 			ID:   role.ID,
 			Name: role.Name,
 		})
@@ -123,7 +115,7 @@ func (h *Handler) GetAllActiveRoles(c *gin.Context) {
 
 	response.HTTPResponse(response.ParamHTTPResponse{
 		Code: http.StatusOK,
-		Data: roles,
+		Data: result,
 		Gin:  c,
 	})
 

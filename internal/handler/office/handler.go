@@ -61,6 +61,32 @@ func (h *Handler) Create(c *gin.Context) {
 	})
 }
 
+func (h *Handler) GetAll(c *gin.Context) {
+	offices, err := h.officeService.GetAllOffices(c.Request.Context())
+	if err != nil {
+		logger.WithContext(c.Request.Context()).WithError(err).Error("Get all office failed")
+		response.InternalServerError(c)
+		return
+	}
+
+	result := make([]responsedto.GetOfficeResponse, 0, len(offices))
+	for _, office := range offices {
+		result = append(result, responsedto.GetOfficeResponse{
+			ID:       office.ID,
+			Code:     office.Code,
+			Name:     office.Name,
+			Address:  office.Address,
+			IsActive: office.IsActive,
+		})
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code: http.StatusOK,
+		Data: result,
+		Gin:  c,
+	})
+}
+
 func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 	offices, err := h.officeService.GetAllActiveOffices(c.Request.Context())
 	if err != nil {
@@ -69,12 +95,7 @@ func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 		return
 	}
 
-	if len(offices) == 0 {
-		response.Empty(c, "オフィス")
-		return
-	}
-
-	var result []responsedto.GetActiveOfficesResponse
+	result := make([]responsedto.GetActiveOfficesResponse, 0, len(offices))
 	for _, office := range offices {
 		result = append(result, responsedto.GetActiveOfficesResponse{
 			ID:   office.ID,
