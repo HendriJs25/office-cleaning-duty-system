@@ -173,3 +173,40 @@ func (h *Handler) GetRoleDetail(c *gin.Context) {
 	})
 
 }
+
+func (h *Handler) DeactivateRole(c *gin.Context) {
+	idStr := strings.TrimSpace(c.Param("id"))
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c)
+		return
+	}
+
+	err = h.roleService.DeactivateRole(c.Request.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrRoleNotFound):
+			response.NotFound(c)
+			return
+		case errors.Is(err, errConstant.ErrSystemRoleImmutable):
+			response.Conflict(c, err)
+			return
+		case errors.Is(err, errConstant.ErrAlreadyDeactivated):
+			response.Conflict(c, err)
+			return
+		case errors.Is(err, errConstant.ErrRoleInUse):
+			response.Conflict(c, err)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("id", id).WithError(err).Error("Deactivate role failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "ロールを無効化しました",
+		Gin:     c,
+	})
+}

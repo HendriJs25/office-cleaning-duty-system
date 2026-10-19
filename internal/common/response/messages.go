@@ -16,7 +16,7 @@ func messageJa(err error) string {
 	case errors.Is(err, errConstant.ErrAccountIsDeactivated):
 		return "このアカウントは無効化されています。管理者にお問い合わせください"
 	case errors.Is(err, errConstant.ErrAlreadyDeactivated):
-		return "このアカウントは既に無効化されています"
+		return "既に無効化されています"
 	case errors.Is(err, errConstant.ErrAlreadyActivated):
 		return "このアカウントは既に有効化されています"
 	case errors.Is(err, errConstant.ErrEmployeeAlreadyAssigned):
@@ -37,6 +37,10 @@ func messageJa(err error) string {
 		return "該当するデータがありません"
 	case errors.Is(err, errConstant.ErrBadRequest):
 		return "入力内容に誤りがあります"
+	case errors.Is(err, errConstant.ErrSystemRoleImmutable):
+		return "システムロールの権限は変更できません"
+	case errors.Is(err, errConstant.ErrRoleInUse):
+		return "このロールはユーザーに割り当てられているため、無効化できません"
 	default:
 		return "サーバー内部でエラーが発生しました"
 	}

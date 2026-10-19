@@ -20,6 +20,7 @@ type Service interface {
 	GetAll(context.Context) ([]RoleResult, error)
 	GetAllActiveRoles(context.Context) ([]GetAllActiveRolesResult, error)
 	GetRoleDetail(context.Context, int64) (*GetRoleDetailResult, error)
+	DeactivateRole(context.Context, int64) error
 }
 
 func NewService(roleRepository rolerepository.Repository, permissionRepository permissionrepository.Repository, transactionManager repository.TransactionManager) Service {
@@ -140,4 +141,34 @@ func (s *service) GetRoleDetail(ctx context.Context, roleID int64) (*GetRoleDeta
 		Permissions: permissionResult,
 	}
 	return &roleResult, nil
+}
+
+func (s *service) DeactivateRole(ctx context.Context, roleID int64) error {
+	role, err := s.roleRepository.FindByID(ctx, roleID, false)
+	if err != nil {
+		return err
+	}
+
+	if role.IsSystem {
+		return errConstant.ErrSystemRoleImmutable
+	}
+
+	if !role.IsActive {
+		return errConstant.ErrAlreadyDeactivated
+	}
+
+	hasAssignedUser, err := s.roleRepository.HasAssignedUsers(ctx, roleID)
+	if err != nil {
+		return err
+	}
+
+	if hasAssignedUser {
+		return errConstant.ErrRoleInUse
+	}
+
+	err = s.roleRepository.UpdateStatus(ctx, roleID, false)
+	if err != nil {
+		return err
+	}
+	return nil
 }

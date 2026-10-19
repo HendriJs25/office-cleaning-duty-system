@@ -15,16 +15,19 @@ func seedRoles(tx *gorm.DB) (map[string]model.Role, error) {
 			Code:     constants.AdminRoleCode,
 			Name:     "管理者",
 			IsActive: true,
+			IsSystem: true,
 		},
 		{
 			Code:     constants.EditorRoleCode,
 			Name:     "編集者",
 			IsActive: true,
+			IsSystem: true,
 		},
 		{
 			Code:     constants.ViewerRoleCode,
 			Name:     "閲覧者",
 			IsActive: true,
+			IsSystem: true,
 		},
 	}
 
@@ -49,6 +52,12 @@ func findOrCreateRole(tx *gorm.DB, roleSeed model.Role) (model.Role, error) {
 	case err == nil:
 		if !role.IsActive {
 			if err := tx.Model(&role).Update("is_active", true).Error; err != nil {
+				return model.Role{}, fmt.Errorf("restore role %q: %w", roleSeed.Code, err)
+			}
+		}
+
+		if !role.IsSystem {
+			if err := tx.Model(&role).Update("is_system", true).Error; err != nil {
 				return model.Role{}, fmt.Errorf("restore role %q: %w", roleSeed.Code, err)
 			}
 		}

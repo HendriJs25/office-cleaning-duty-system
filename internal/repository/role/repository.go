@@ -22,6 +22,8 @@ type Repository interface {
 	FindByID(context.Context, int64, bool) (*model.Role, error)
 	FindByCode(context.Context, string) (*model.Role, error)
 	ExistByCode(context.Context, string) (bool, error)
+	UpdateStatus(context.Context, int64, bool) error
+	HasAssignedUsers(context.Context, int64) (bool, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -108,6 +110,28 @@ func (r *repository) ExistByCode(ctx context.Context, code string) (bool, error)
 	err := r.db.WithContext(ctx).Model(&model.Role{}).Where("code = ?", code).Count(&count).Error
 	if err != nil {
 		return false, fmt.Errorf("is exist by code: %w", err)
+	}
+	return count > 0, nil
+}
+
+func (r *repository) UpdateStatus(ctx context.Context, roleID int64, isActive bool) error {
+	result := r.db.WithContext(ctx).Model(&model.Role{}).Where("id = ?", roleID).Update("is_active", isActive)
+	if result.Error != nil {
+		return fmt.Errorf("update role active status: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return errConstant.ErrRoleNotFound
+	}
+
+	return nil
+}
+
+func (r *repository) HasAssignedUsers(ctx context.Context, roleID int64) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.User{}).Where("role_id = ?", roleID).Count(&count).Error
+	if err != nil {
+		return false, fmt.Errorf("check assigned users: %w", err)
 	}
 	return count > 0, nil
 }
