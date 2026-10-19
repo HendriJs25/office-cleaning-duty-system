@@ -12,4 +12,5 @@ func Register(router *gin.RouterGroup, handler *officehandler.Handler, authoriza
 	router.GET("/offices", authorization.RequirePermission(constants.PermissionOfficeRead), handler.GetAll)
 	router.POST("/offices", authorization.RequirePermission(constants.PermissionOfficeCreate), handler.Create)
 	router.GET("/offices/options", authorization.RequirePermission(constants.PermissionOfficeRead), handler.GetAllActiveOffices)
+	router.PATCH("/offices/:id", authorization.RequirePermission(constants.PermissionOfficeUpdate), handler.UpdateByID)
 }

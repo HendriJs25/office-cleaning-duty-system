@@ -18,3 +18,8 @@ type GetOfficeResult struct {
 	Address  *string
 	IsActive bool
 }
+
+type UpdateOfficeInput struct {
+	Name    string
+	Address *string
+}

@@ -15,6 +15,7 @@ type Service interface {
 	Create(context.Context, CreateOfficeInput) error
 	GetAllOffices(context.Context) ([]GetOfficeResult, error)
 	GetAllActiveOffices(context.Context) ([]GetActiveOfficeResult, error)
+	UpdateByID(context.Context, int64, UpdateOfficeInput) error
 }
 
 func NewService(officeRepository officerepository.Repository) Service {
@@ -85,4 +86,17 @@ func (s *service) GetAllActiveOffices(ctx context.Context) ([]GetActiveOfficeRes
 	}
 
 	return result, nil
+}
+
+func (s *service) UpdateByID(ctx context.Context, officeID int64, input UpdateOfficeInput) error {
+	updates := map[string]any{
+		"name":    input.Name,
+		"address": input.Address,
+	}
+
+	err := s.officeRepository.UpdateByID(ctx, officeID, updates)
+	if err != nil {
+		return err
+	}
+	return nil
 }

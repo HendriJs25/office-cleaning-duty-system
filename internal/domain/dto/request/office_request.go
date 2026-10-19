@@ -5,3 +5,8 @@ type CreateOfficeRequest struct {
 	Name    string  `json:"name" validate:"required,notblank,max=150"`
 	Address *string `json:"address,omitempty" validate:"omitempty,notblank"`
 }
+
+type UpdateOfficeRequest struct {
+	Name    string  `json:"name" validate:"required,notblank,max=150"`
+	Address *string `json:"address,omitempty" validate:"omitempty,notblank"`
+}

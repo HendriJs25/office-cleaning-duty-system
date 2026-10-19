@@ -20,6 +20,7 @@ type Repository interface {
 	GetAll(context.Context) ([]model.Office, error)
 	GetAllActive(context.Context) ([]model.Office, error)
 	GetByID(context.Context, int64) (*model.Office, error)
+	UpdateByID(context.Context, int64, map[string]any) error
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -72,4 +73,15 @@ func (r *repository) GetByID(ctx context.Context, id int64) (*model.Office, erro
 		return nil, fmt.Errorf("get office by id: %w", err)
 	}
 	return &office, nil
+}
+
+func (r *repository) UpdateByID(ctx context.Context, officeID int64, fields map[string]any) error {
+	result := r.db.WithContext(ctx).Model(model.Office{}).Where("id = ?", officeID).Updates(fields)
+	if result.Error != nil {
+		return fmt.Errorf("update office by id: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return errConstant.ErrNotFound
+	}
+	return nil
 }
