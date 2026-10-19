@@ -8,6 +8,7 @@ type Role struct {
 	Name        string
 	Description *string
 	IsActive    bool `gorm:"not null;default:true"`
+	IsSystem    bool `gorm:"not null;default:false"`
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 
