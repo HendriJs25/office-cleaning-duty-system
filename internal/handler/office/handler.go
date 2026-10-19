@@ -9,6 +9,7 @@ import (
 	officeservice "cleaning/internal/services/office"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	customValidator "github.com/go-playground/validator/v10"
@@ -107,5 +108,48 @@ func (h *Handler) GetAllActiveOffices(c *gin.Context) {
 		Code: http.StatusOK,
 		Data: result,
 		Gin:  c,
+	})
+}
+
+func (h *Handler) UpdateByID(c *gin.Context) {
+	idStr := c.Param("id")
+	parsedID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || parsedID <= 0 {
+		response.BadRequest(c)
+		return
+	}
+
+	var req request.UpdateOfficeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	if err := h.validate.Struct(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	err = h.officeService.UpdateByID(c.Request.Context(), parsedID, officeservice.UpdateOfficeInput{
+		Name:    req.Name,
+		Address: req.Address,
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrNotFound):
+			response.NotFound(c)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("office_id", parsedID).WithError(err).Error("Update office failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "オフィスを更新しました",
+		Gin:     c,
 	})
 }
