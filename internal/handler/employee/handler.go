@@ -200,7 +200,6 @@ func (h *Handler) UpdateEmployeeByAdmin(c *gin.Context) {
 		GivenName:           req.GivenName,
 		FamilyNameKana:      req.FamilyNameKana,
 		GivenNameKana:       req.GivenNameKana,
-		IsActive:            *req.IsActive,
 		EmploymentStartDate: req.EmploymentStartDate.TimePtr(),
 		EmploymentEndDate:   req.EmploymentEndDate.TimePtr(),
 	})
@@ -228,4 +227,36 @@ func (h *Handler) UpdateEmployeeByAdmin(c *gin.Context) {
 		Message: "従業員情報を更新しました",
 		Gin:     c,
 	})
+}
+
+func (h *Handler) DeactivateEmployee(c *gin.Context) {
+	uuidStr := c.Param("uuid")
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		response.BadRequest(c)
+		return
+	}
+
+	err = h.employeeService.DeactivateEmployee(c.Request.Context(), parsedUUID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errConstant.ErrEmployeeNotFound):
+			response.NotFound(c)
+			return
+		case errors.Is(err, errConstant.ErrAlreadyDeactivated):
+			response.Conflict(c, err)
+			return
+		default:
+			logger.WithContext(c.Request.Context()).WithField("employee_uuid", parsedUUID).WithError(err).Error("Deactivate employee failed")
+			response.InternalServerError(c)
+			return
+		}
+	}
+
+	response.HTTPResponse(response.ParamHTTPResponse{
+		Code:    http.StatusOK,
+		Message: "従業員を無効化しました",
+		Gin:     c,
+	})
+
 }

@@ -20,6 +20,7 @@ type Repository interface {
 	FindAll(context.Context) ([]model.User, error)
 	FindByEmail(context.Context, string) (*model.User, error)
 	FindByUUID(context.Context, uuid.UUID) (*model.User, error)
+	FindByEmployeeID(context.Context, int64) (*model.User, error)
 	ExistByEmail(context.Context, string) (bool, error)
 	Create(context.Context, *model.User) error
 	UpdateByUUID(context.Context, uuid.UUID, map[string]any) error
@@ -70,6 +71,18 @@ func (r *repository) ExistByEmail(ctx context.Context, email string) (bool, erro
 		return false, fmt.Errorf("is email exist: %w", err)
 	}
 	return count > 0, nil
+}
+
+func (r *repository) FindByEmployeeID(ctx context.Context, employeeID int64) (*model.User, error) {
+	var user model.User
+	err := r.db.WithContext(ctx).Where("employee_id = ?", employeeID).Take(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("find user by employeeID: %w", err)
+	}
+	return &user, nil
 }
 
 func (r *repository) Create(ctx context.Context, user *model.User) error {

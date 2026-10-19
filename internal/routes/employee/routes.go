@@ -16,4 +16,5 @@ func Register(router *gin.RouterGroup, handler *employeehandler.Handler, verific
 	router.GET("/employees/:uuid", authorization.RequirePermission(constants.PermissionEmployeeRead), handler.GetDetailEmployee)
 	router.PATCH("/employees/:uuid", authorization.RequirePermission(constants.PermissionEmployeeUpdate), handler.UpdateEmployeeByAdmin)
 	router.POST("/employees/:uuid/registration-tokens", authorization.RequirePermission(constants.PermissionEmployeeInvitationCreate), verificationTokenHandler.CreateRegistrationToken)
+	router.PATCH("employees/:uuid/deactivate", authorization.RequirePermission(constants.PermissionEmployeeDeactivate), handler.DeactivateEmployee)
 }

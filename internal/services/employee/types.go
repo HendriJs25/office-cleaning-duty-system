@@ -53,7 +53,6 @@ type UpdateEmployeeByAdminInput struct {
 	GivenName           string
 	FamilyNameKana      *string
 	GivenNameKana       *string
-	IsActive            bool
 	EmploymentStartDate *time.Time
 	EmploymentEndDate   *time.Time
 }
