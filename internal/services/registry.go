@@ -35,7 +35,7 @@ func NewRegistry(repositories *repository.Registry, sessionRepository sessionrep
 		RoleService:              roleservice.NewService(repositories.Role, repositories.Permission, permissionCacheRepository, repositories.Transaction),
 		PermissionService:        permissionservice.NewService(repositories.Permission, permissionCacheRepository),
 		UserService:              userservice.NewService(repositories.User, repositories.Role, repositories.Employee, sessionRepository),
-		OfficeService:            officeservice.NewService(repositories.Office),
+		OfficeService:            officeservice.NewService(repositories.Office, repositories.Transaction),
 		EmployeeService:          employeeservice.NewService(repositories.Employee, repositories.Office, repositories.VerificationToken, repositories.User, repositories.Transaction, sessionRepository),
 		VerificationTokenService: verificationtokenservice.NewService(repositories.Transaction, repositories.VerificationToken, repositories.Employee),
 	}

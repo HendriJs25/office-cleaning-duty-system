@@ -60,9 +60,8 @@ func runServer() error {
 	}()
 
 	logger.Log.WithFields(logrus.Fields{
-		"host": cfg.Redis.Host,
-		"port": cfg.Redis.Port,
-		"name": cfg.Redis.DB,
+		"addr": redisDB.Client.Options().Addr,
+		"db":   redisDB.Client.Options().DB,
 	}).Info("redis connection established")
 
 	v, err := validator.New()

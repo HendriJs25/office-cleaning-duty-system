@@ -3,12 +3,14 @@ package office
 import (
 	errConstant "cleaning/internal/constants/error"
 	"cleaning/internal/domain/model"
+	"cleaning/internal/repository"
 	officerepository "cleaning/internal/repository/office"
 	"context"
 )
 
 type service struct {
-	officeRepository officerepository.Repository
+	officeRepository   officerepository.Repository
+	transactionManager repository.TransactionManager
 }
 
 type Service interface {
@@ -16,11 +18,13 @@ type Service interface {
 	GetAllOffices(context.Context) ([]GetOfficeResult, error)
 	GetAllActiveOffices(context.Context) ([]GetActiveOfficeResult, error)
 	UpdateByID(context.Context, int64, UpdateOfficeInput) error
+	DeactivateOffice(context.Context, int64) error
 }
 
-func NewService(officeRepository officerepository.Repository) Service {
+func NewService(officeRepository officerepository.Repository, transactionManager repository.TransactionManager) Service {
 	return &service{
-		officeRepository: officeRepository,
+		officeRepository:   officeRepository,
+		transactionManager: transactionManager,
 	}
 }
 
@@ -95,6 +99,43 @@ func (s *service) UpdateByID(ctx context.Context, officeID int64, input UpdateOf
 	}
 
 	err := s.officeRepository.UpdateByID(ctx, officeID, updates)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *service) DeactivateOffice(ctx context.Context, officeID int64) error {
+	err := s.transactionManager.WithinTransaction(ctx, func(repositories *repository.Registry) error {
+		office, err := repositories.Office.GetByIDForUpdate(ctx, officeID)
+		if err != nil {
+			return err
+		}
+
+		if !office.IsActive {
+			return errConstant.ErrAlreadyDeactivated
+		}
+
+		hasAssignedEmployee, err := repositories.Office.HasAssignedEmployee(ctx, officeID)
+		if err != nil {
+			return err
+		}
+		if hasAssignedEmployee {
+			return errConstant.ErrOfficeInUse
+		}
+
+		err = repositories.OfficeArea.DeactivateByOfficeID(ctx, officeID)
+		if err != nil {
+			return err
+		}
+
+		err = repositories.Office.UpdateStatus(ctx, office.ID, false)
+		if err != nil {
+			return err
+		}
+		return nil
+
+	})
 	if err != nil {
 		return err
 	}

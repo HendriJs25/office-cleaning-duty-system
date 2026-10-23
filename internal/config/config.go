@@ -48,9 +48,6 @@ func (c *Config) validate() error {
 	if err := c.JWT.Validate(); err != nil {
 		return err
 	}
-	if err := c.Redis.Validate(); err != nil {
-		return err
-	}
 	return nil
 }
 func (c *Config) ServerAddress() string {

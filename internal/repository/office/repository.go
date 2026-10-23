@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type repository struct {
@@ -20,7 +21,10 @@ type Repository interface {
 	GetAll(context.Context) ([]model.Office, error)
 	GetAllActive(context.Context) ([]model.Office, error)
 	GetByID(context.Context, int64) (*model.Office, error)
+	GetByIDForUpdate(context.Context, int64) (*model.Office, error)
 	UpdateByID(context.Context, int64, map[string]any) error
+	UpdateStatus(context.Context, int64, bool) error
+	HasAssignedEmployee(context.Context, int64) (bool, error)
 }
 
 func NewRepository(db *gorm.DB) Repository {
@@ -63,9 +67,21 @@ func (r *repository) GetAllActive(ctx context.Context) ([]model.Office, error) {
 	return offices, nil
 }
 
-func (r *repository) GetByID(ctx context.Context, id int64) (*model.Office, error) {
+func (r *repository) GetByID(ctx context.Context, officeID int64) (*model.Office, error) {
 	var office model.Office
-	err := r.db.WithContext(ctx).Where("id = ?", id).Take(&office).Error
+	err := r.db.WithContext(ctx).Where("id = ?", officeID).Take(&office).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errConstant.ErrNotFound
+		}
+		return nil, fmt.Errorf("get office by id: %w", err)
+	}
+	return &office, nil
+}
+
+func (r *repository) GetByIDForUpdate(ctx context.Context, officeID int64) (*model.Office, error) {
+	var office model.Office
+	err := r.db.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", officeID).Take(&office).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errConstant.ErrNotFound
@@ -84,4 +100,24 @@ func (r *repository) UpdateByID(ctx context.Context, officeID int64, fields map[
 		return errConstant.ErrNotFound
 	}
 	return nil
+}
+
+func (r *repository) UpdateStatus(ctx context.Context, officeID int64, isActive bool) error {
+	result := r.db.WithContext(ctx).Model(model.Office{}).Where("id = ?", officeID).Update("is_active", isActive)
+	if result.Error != nil {
+		return fmt.Errorf("update office active status: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return errConstant.ErrNotFound
+	}
+	return nil
+}
+
+func (r *repository) HasAssignedEmployee(ctx context.Context, officeID int64) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(model.Employee{}).Where("office_id = ?", officeID).Count(&count).Error
+	if err != nil {
+		return false, fmt.Errorf("check assigned employee: %w", err)
+	}
+	return count > 0, nil
 }
