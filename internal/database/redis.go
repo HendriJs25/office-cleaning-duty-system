@@ -4,7 +4,6 @@ import (
 	"cleaning/internal/config"
 	"context"
 	"fmt"
-	"net"
 	"time"
 
 	redislib "github.com/go-redis/redis/v8"
@@ -17,11 +16,12 @@ type Redis struct {
 }
 
 func NewRedis(cfg *config.Redis) (*Redis, error) {
-	client := redislib.NewClient(&redislib.Options{
-		Addr:     net.JoinHostPort(cfg.Host, cfg.Port),
-		Password: cfg.Password,
-		DB:       cfg.DB,
-	})
+	options, err := redislib.ParseURL(cfg.RedisURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse redis url: %w", err)
+	}
+
+	client := redislib.NewClient(options)
 
 	ctx, cancel := context.WithTimeout(context.Background(), redisPingTimeout)
 	defer cancel()
